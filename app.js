@@ -1,9 +1,11 @@
+const config = require('./utils/config')
 const express = require('express')
 const app = express()
 const cors = require('cors')
 const mongoose = require('mongoose')
+const recipesRouter = require('./controllers/recipesRouter')
 
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI = config.MONGODB_URI
 
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, useFindAndModify: false })
     .then(() => {
@@ -18,5 +20,6 @@ app.get('/', (request, response) => {
 
 app.use(cors())
 app.use(express.json())
+app.use('/api/recipes',recipesRouter)
 
 module.exports = app;

@@ -1,0 +1,24 @@
+POST http://localhost:3001/api/recipes
+Content-Type: application/json
+
+{
+    "name": "waffles",
+    "description" : "yummy",
+    "instructions": ["heat pan", "add oil", "add batter", "cook", "flip"],
+    "ingredients" : [
+        {"name": "batter", "amount": 1, "unit" : "cup"},
+        {"name": "water", "amount": 2, "unit": "cup"}
+    ],
+    "stars" : 2.5,
+    "timeToMake" : {
+        "value" : 5,
+        "unit" : "minutes"
+    },
+    "servingInfo": {
+        "numServed": 1,
+        "yield": 1,
+        "servingSize": 1,
+        "unit" : "pancake"
+    },
+    "calories": 300
+}
