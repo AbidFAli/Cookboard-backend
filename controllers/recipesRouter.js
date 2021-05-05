@@ -3,6 +3,8 @@ const { response } = require('../app')
 const Recipe = require('../models/recipe')
 
 recipesRouter.get('/', async (request, response) => {
+    const recipes = await Recipe.find({})
+    response.json(recipes)
 
 })
 
@@ -22,22 +24,33 @@ recipesRouter.post('/', async (request, response) => {
         name: body.name,
         description: body.description,
         instructions: body.instructions,
-        ingredients: body.ingredients,   //could cause issues b/c of schema
+        ingredients: body.ingredients,   
         stars: body.stars,
         timeToMake: body.timeToMake,
         servingInfo: body.servingInfo,
         calories: body.calories
     })
     await recipe.save()
-    response.json(recipe)
+    response.status(201).json(recipe)
 })
 
 
-recipesRouter.put('/:id' , async (request, response) => {
-
+recipesRouter.put('/:id' , async (request, response, next) => {
+    const recipe = await Recipe.findById(request.params.id);
+    if(recipe){
+        let newRecipe = request.body
+        recipe.set(newRecipe)
+        let updatedRecipe = await recipe.save()
+        response.send(updatedRecipe)
+    }
+    else{
+        response.status(404).end()
+    }
 })
 
 recipesRouter.delete('/:id' , async (request, response) => {
+    await Recipe.deleteOne({_id : request.params.id})
+    response.status(204).end()
 
 })
 

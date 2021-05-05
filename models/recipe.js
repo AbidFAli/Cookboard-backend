@@ -26,7 +26,7 @@ const recipeSchema = new mongoose.Schema({
     calories: Number
 })
 
-//TODO needs testing
+//renames _id to id when recipe is returned as json from MongoDB
 recipeSchema.set('toJSON', {
     transform: function(doc, returnedObject, options){
         returnedObject.id = returnedObject._id.toString();
