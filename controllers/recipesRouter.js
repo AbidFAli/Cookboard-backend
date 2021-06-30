@@ -1,5 +1,4 @@
 const recipesRouter = require('express').Router()
-const { response } = require('../app')
 const Recipe = require('../models/recipe')
 
 recipesRouter.get('/', async (request, response) => {
@@ -25,7 +24,7 @@ recipesRouter.post('/', async (request, response) => {
         description: body.description,
         instructions: body.instructions,
         ingredients: body.ingredients,   
-        stars: body.stars,
+        rating: body.rating,
         timeToMake: body.timeToMake,
         servingInfo: body.servingInfo,
         calories: body.calories
@@ -46,6 +45,7 @@ recipesRouter.put('/:id' , async (request, response, next) => {
     else{
         response.status(404).end()
     }
+    next()
 })
 
 recipesRouter.delete('/:id' , async (request, response) => {

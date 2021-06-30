@@ -2,7 +2,6 @@ const supertest = require('supertest')
 const mongoose = require('mongoose')
 const app = require('../app')
 const Recipe = require('../models/recipe')
-const Ingredient = require('../models/ingredient')
 
 const api = supertest(app)
 
@@ -20,7 +19,7 @@ describe('with no recipies in the database', () => {
                     {name: "batter", amount: 1, unit : "cup"},
                     {name: "water", amount: 2, unit: "cup"}
                 ],
-                stars: 2.5,
+                rating: 2.5,
                 timeToMake: {value: 5, unit: "minutes"},
                 servingInfo: { numServed: 1, yield: 1, servingSize: 1, unit: "pancake"},
                 calories: 300
@@ -32,7 +31,7 @@ describe('with no recipies in the database', () => {
         test('a recipe wont be added if its name is blank', async () => {
             let testRecipe = {
                 description: "healthy",
-                stars: 4,
+                rating: 4,
                 calories: 300
             }
             let response = await api.post('/api/recipes').send(testRecipe).expect(400)
@@ -50,7 +49,7 @@ describe('with a recipe in the database', () => {
             {name: "batter", amount: 1, unit : "cup"},
             {name: "water", amount: 2, unit: "cup"}
         ],
-        stars: 2.5,
+        rating: 2.5,
         timeToMake: {value: 5, unit: "minutes"},
         servingInfo: { numServed: 1, yield: 1, servingSize: 1, unit: "pancake"},
         calories: 300

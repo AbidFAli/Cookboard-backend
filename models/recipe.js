@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const {ingredientSchema, Ingredient} = require('./ingredient')
+const {ingredientSchema} = require('./ingredient')
 
 const recipeSchema = new mongoose.Schema({
     name: {
@@ -9,7 +9,7 @@ const recipeSchema = new mongoose.Schema({
     description: String,
     instructions: [String],
     ingredients: [ingredientSchema],
-    stars: {
+    rating: {
         type: Number,
         default: 0
     },
@@ -23,7 +23,11 @@ const recipeSchema = new mongoose.Schema({
         servingSize: Number,
         unit: String,
     },
-    calories: Number
+    calories: Number,
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    }
 })
 
 //renames _id to id when recipe is returned as json from MongoDB

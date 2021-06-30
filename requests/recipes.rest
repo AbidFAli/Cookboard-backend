@@ -9,7 +9,7 @@ Content-Type: application/json
         {"name": "batter", "amount": 1, "unit" : "cup"},
         {"name": "water", "amount": 2, "unit": "cup"}
     ],
-    "stars" : 2.5,
+    "rating" : 2.5,
     "timeToMake" : {
         "value" : 5,
         "unit" : "minutes"

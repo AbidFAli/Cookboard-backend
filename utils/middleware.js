@@ -1,6 +1,9 @@
 const errorHandler = function(error, request, response, next){
     if(error.name === 'ValidationError'){
         return response.status(400).json({error: error.message})
+    }else{
+        console.log(error)
+        return response.status(400).json({error: error.message})
     }
     next(error)
 }
