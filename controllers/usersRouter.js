@@ -6,9 +6,21 @@ const PASSWORD_ERROR_MESSAGE = `PasswordError: password was less than ${MIN_PASS
 
 const NUM_SALTS = 10;
 
+const recipeInfoToPopulate = {_id: 1, name: 1}
+
 usersRouter.get('/', async (request, response) => {
-  const users = await User.find({})
+  const users = await User.find({}).populate('recipes', recipeInfoToPopulate)
   response.json(users)
+})
+
+usersRouter.get('/:id', async (request, response, next) => {
+  const user = await User.findById(request.params.id).populate('recipes', recipeInfoToPopulate)
+  if(user){
+    response.json(user)
+  }
+  else{
+    response.status(404)
+  }
 })
 
 usersRouter.post('/', async (request, response, next) => {

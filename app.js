@@ -8,6 +8,7 @@ const morgan = require('morgan')
 
 const usersRouter = require('./controllers/usersRouter')
 const recipesRouter = require('./controllers/recipesRouter')
+const loginRouter = require('./controllers/loginRouter')
 
 const middleware = require('./utils/middleware')
 
@@ -28,6 +29,7 @@ app.get('/', (request, response) => {
 app.use(cors())
 app.use(express.json())
 //app.use(morgan('dev'))
+app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
 app.use('/api/recipes',recipesRouter)
 if(process.env.NODE_ENV === 'test'){

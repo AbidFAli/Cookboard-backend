@@ -2,11 +2,23 @@ const supertest = require('supertest')
 const mongoose = require('mongoose')
 const app = require('../app')
 const Recipe = require('../models/recipe')
+const User = require('../models/user')
 
 const api = supertest(app)
 
+
+
+let initialUser;
 beforeEach(async () => {
     await Recipe.deleteMany({})
+    await User.deleteMany({})
+    let initialUserInfo = {
+        username: "AbidAli",
+        password: "password",
+        email: "test@test.com"
+    }
+    let response = await api.post('/api/users').send(initialUserInfo)
+    initialUser = response.body
 })
 describe('with no recipies in the database', () => {
     describe('tests for POST /api/recipes', () => {
@@ -22,7 +34,8 @@ describe('with no recipies in the database', () => {
                 rating: 2.5,
                 timeToMake: {value: 5, unit: "minutes"},
                 servingInfo: { numServed: 1, yield: 1, servingSize: 1, unit: "pancake"},
-                calories: 300
+                calories: 300,
+                user: initialUser.id
             }
             let response = await api.post('/api/recipes').send(testRecipe).expect(201)
             expect(response.body).toMatchObject(testRecipe)
@@ -35,6 +48,25 @@ describe('with no recipies in the database', () => {
                 calories: 300
             }
             let response = await api.post('/api/recipes').send(testRecipe).expect(400)
+        })
+
+        test("after creating a recipe, the creating user will have the recipe's id", async () => {
+            let testRecipe = {
+                name: "Sushi",
+                user: initialUser.id
+            }
+            let response = await api.post('/api/recipes').send(testRecipe).expect(201)
+            expect(response.body.user).toMatch(initialUser.id.toString())
+            let updatedUser = await api.get(`/api/users/${initialUser.id}`)
+            updatedUser = updatedUser.body
+            expect(updatedUser.recipes.length).toEqual(initialUser.recipes.length + 1)
+            expect(updatedUser.recipes).toContainEqual(
+                expect.objectContaining(
+                    {
+                        id: response.body.id
+                    }
+                )
+            ) 
         })
     })
 })

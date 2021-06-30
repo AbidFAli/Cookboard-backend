@@ -1,5 +1,7 @@
 const recipesRouter = require('express').Router()
 const Recipe = require('../models/recipe')
+const User = require('../models/user')
+
 
 recipesRouter.get('/', async (request, response) => {
     const recipes = await Recipe.find({})
@@ -17,8 +19,13 @@ recipesRouter.get('/:id', async (request, response) => {
     }
 })
 
-recipesRouter.post('/', async (request, response) => {
+recipesRouter.post('/', async (request, response, next) => {
     const body = request.body;
+    let user = null;
+    if(body.user){
+        user = await User.findById(body.user)
+    }
+
     const recipe = new Recipe({
         name: body.name,
         description: body.description,
@@ -27,9 +34,17 @@ recipesRouter.post('/', async (request, response) => {
         rating: body.rating,
         timeToMake: body.timeToMake,
         servingInfo: body.servingInfo,
-        calories: body.calories
+        calories: body.calories,
+        user: user != null ? user._id : null, //id of the user
     })
-    await recipe.save()
+    const savedRecipe = await recipe.save()
+
+    if(user){
+        user.recipes = user.recipes.concat(savedRecipe._id)
+        await user.save()
+    }
+
+
     response.status(201).json(recipe)
 })
 
