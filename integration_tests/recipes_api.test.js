@@ -3,15 +3,20 @@ const mongoose = require('mongoose')
 const app = require('../app')
 const Recipe = require('../models/recipe')
 const User = require('../models/user')
-
+const {authHeader} = require('./test_utils/testHelper.js')
 const api = supertest(app)
 
 
 
 let initialUser;
+let initialUserToken;
+
+
+
+
 beforeEach(async () => {
-    await Recipe.deleteMany({})
     await User.deleteMany({})
+    await Recipe.deleteMany({})
     let initialUserInfo = {
         username: "AbidAli",
         password: "password",
@@ -19,7 +24,10 @@ beforeEach(async () => {
     }
     let response = await api.post('/api/users').send(initialUserInfo)
     initialUser = response.body
+    initialUserToken = await api.post('/api/login').send(initialUserInfo)
+    initialUserToken = initialUserToken.body.token
 })
+
 describe('with no recipies in the database', () => {
     describe('tests for POST /api/recipes', () => {
         test('a recipe can be added', async () => {
@@ -37,7 +45,7 @@ describe('with no recipies in the database', () => {
                 calories: 300,
                 user: initialUser.id
             }
-            let response = await api.post('/api/recipes').send(testRecipe).expect(201)
+            let response = await api.post('/api/recipes').set(authHeader(initialUserToken)).send(testRecipe).expect(201)
             expect(response.body).toMatchObject(testRecipe)
         });
     
@@ -47,7 +55,7 @@ describe('with no recipies in the database', () => {
                 rating: 4,
                 calories: 300
             }
-            let response = await api.post('/api/recipes').send(testRecipe).expect(400)
+            let response = await api.post('/api/recipes').set(authHeader(initialUserToken)).send(testRecipe).expect(400)
         })
 
         test("after creating a recipe, the creating user will have the recipe's id", async () => {
@@ -55,7 +63,7 @@ describe('with no recipies in the database', () => {
                 name: "Sushi",
                 user: initialUser.id
             }
-            let response = await api.post('/api/recipes').send(testRecipe).expect(201)
+            let response = await api.post('/api/recipes').set(authHeader(initialUserToken)).send(testRecipe).expect(201)
             expect(response.body.user).toMatch(initialUser.id.toString())
             let updatedUser = await api.get(`/api/users/${initialUser.id}`)
             updatedUser = updatedUser.body
@@ -68,6 +76,31 @@ describe('with no recipies in the database', () => {
                 )
             ) 
         })
+
+        
+        test("a valid header must be provided to create a reipe", async () => {
+            let testRecipe = {
+                name: "waffles",
+                user: initialUser.id
+            }
+           
+            let response = await api.post('/api/recipes')
+                .set(authHeader(initialUserToken))
+                .send(testRecipe)
+                .expect(201)
+
+            expect(response.body).toMatchObject(testRecipe)
+        })
+
+        test("401 error response when the user is not logged in and tries to create a recipe", async () => {
+            let testRecipe = {
+                name: "waffles",
+                user: initialUser.id
+            }
+            await api.post('/api/recipes').send(testRecipe).expect(401)
+        })
+
+
     })
 })
 

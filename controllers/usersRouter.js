@@ -15,6 +15,7 @@ usersRouter.get('/', async (request, response) => {
 
 //maybe secure this/make it not publicly accessible if there is user info you want to keep secret
 //or only allow it during test?
+//TODO: swap this with the login 
 usersRouter.get('/:id', async (request, response, next) => {
   const user = await User.findById(request.params.id).populate('recipes', recipeInfoToPopulate)
   if(user){

@@ -1,8 +1,10 @@
 const supertest = require('supertest')
+const bcrypt = require('bcrypt')
 const mongoose = require('mongoose')
 const app = require('../app')
 const Recipe = require('../models/recipe')
 const User = require('../models/user')
+const {authHeader, getTokenForUser} = require('./test_utils/testHelper.js')
 
 const api = supertest(app)
 
@@ -55,19 +57,31 @@ describe('tests for GET /api/users/:id', () => {
   describe('when there is a user that has made multiple recipes', () =>{
     let userWithRecipes;
     let testRecipe = {name: "lamb chops"};
+    let userWithRecipesToken;
     const userWithRecipesInfo = 
     {
       username: "User2",
-      passwordHash: "hash",
+      password: "stuff",
       email: "something@something.com"
     }
 
+    beforeAll(async () => {
+      userWithRecipesInfo.passwordHash = await bcrypt.hash(userWithRecipesInfo.password, 1)
+    })
+
     beforeEach(async () => {
-      userWithRecipes = new User(userWithRecipesInfo)
+      userWithRecipes = new User({
+        username: userWithRecipesInfo.username, 
+        email: userWithRecipesInfo.email, 
+        passwordHash: userWithRecipesInfo.passwordHash
+      })
       userWithRecipes = await userWithRecipes.save()
-      testRecipe = await api.post('/api/recipes').send({name: "lamb chops", user: userWithRecipes.id})
+      userWithRecipesToken = await getTokenForUser(api, userWithRecipesInfo.username, userWithRecipesInfo.password)
+      let header = authHeader(userWithRecipesToken)
+      testRecipe = await api.post('/api/recipes').set(header).send({name: "lamb chops", user: userWithRecipes.id})
       testRecipe = testRecipe.body
       userWithRecipes = await User.findById(userWithRecipes.id)
+      
     })
 
     
