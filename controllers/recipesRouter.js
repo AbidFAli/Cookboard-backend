@@ -6,21 +6,13 @@ const User = require('../models/user')
 
 
 
-//keep the space
-const TOKEN_PREFIX = 'Bearer '
+
 
 const decodeToken = (token) => {
     return jwt.verify(token, process.env.SECRET)
 }
 
-//returns null if token is improperly formatted or does not exist
-const getTokenFromHeader = (request) => {
-    let authHeader = request.get('Authorization')
-    if(authHeader && authHeader.toLowerCase().startsWith(TOKEN_PREFIX.toLowerCase())){
-        authHeader = authHeader.slice(TOKEN_PREFIX.length)
-    }
-    return authHeader;
-}
+
 
 recipesRouter.get('/', async (request, response) => {
     const recipes = await Recipe.find({})
@@ -42,16 +34,7 @@ recipesRouter.get('/:id', async (request, response) => {
 */
 recipesRouter.post('/', async (request, response, next) => {
     const body = request.body;
-    let user = null;
-    let token = getTokenFromHeader(request);
-    let decodedToken = token != null || token != undefined ? decodeToken(token) : null;
-
-    if(decodedToken && decodedToken.id){    
-        user = await User.findById(decodedToken.id)
-    }
-    else{
-        return response.status(401).end()
-    }
+    let user = request.user
 
     const recipe = new Recipe({
         name: body.name,

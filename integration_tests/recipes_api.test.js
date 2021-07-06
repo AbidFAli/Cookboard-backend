@@ -24,8 +24,8 @@ beforeEach(async () => {
     }
     let response = await api.post('/api/users').send(initialUserInfo)
     initialUser = response.body
-    initialUserToken = await api.post('/api/login').send(initialUserInfo)
-    initialUserToken = initialUserToken.body.token
+    response = await api.post('/api/login').send(initialUserInfo)
+    initialUserToken = response.body.token
 })
 
 describe('with no recipies in the database', () => {
@@ -141,20 +141,27 @@ describe('with a recipe in the database', () => {
         test('updates an existing recipe with that id', async () => {
             let newRecipe = {...recipeParams}
             newRecipe.calories = 400;
-            let response = await api.put(`/api/recipes/${testId}`).send(newRecipe).expect(200)
+            let response = await api.put(`/api/recipes/${testId}`)
+                .set(authHeader(initialUserToken))
+                .send(newRecipe)
+                .expect(200)
+
             expect(response.body).toMatchObject(newRecipe)
             expect(response.body.id).toMatch(testId)
         })
 
         test('returns error 404 if no recipe with that id exists', async () => {
             let newRecipe = {...recipeParams}
-            let response = await api.put(`/api/recipes/a402cdd2c9e0600bfea94283`).send(newRecipe).expect(404)
+            let response = await api.put(`/api/recipes/a402cdd2c9e0600bfea94283`)
+                .set(authHeader(initialUserToken))
+                .send(newRecipe)
+                .expect(404)
         })
     })
     
     describe('DELETE /api/recipes/:id', () => {
         test('deletes the recipe with the specified id', async () => {
-            await api.delete(`/api/recipes/${testId}`).expect(204)
+            await api.delete(`/api/recipes/${testId}`).set(authHeader(initialUserToken)).expect(204)
             await api.get(`/api/recipes/${testId}`).expect(404)
         })
     })

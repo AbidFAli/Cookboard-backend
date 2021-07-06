@@ -11,6 +11,7 @@ const recipesRouter = require('./controllers/recipesRouter')
 const loginRouter = require('./controllers/loginRouter')
 
 const middleware = require('./utils/middleware')
+const {useMethodsExcept} = require('./utils/middlewareHelper')
 
 const MONGODB_URI = config.MONGODB_URI
 
@@ -30,8 +31,11 @@ app.use(cors())
 app.use(express.json())
 //app.use(morgan('dev'))
 app.use('/api/login', loginRouter)
+app.use(middleware.tokenExtractor)
 app.use('/api/users', usersRouter)
-app.use('/api/recipes',recipesRouter)
+app.use('/api/recipes', 
+    useMethodsExcept(['GET'], middleware.userExtractor)
+    , recipesRouter)
 if(process.env.NODE_ENV === 'test'){
     const testingRouter = require('./controllers/testingRouter')
     app.use('/api/test', testingRouter)
