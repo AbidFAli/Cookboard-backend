@@ -3,7 +3,7 @@ const mongoose = require('mongoose')
 const app = require('../app')
 const Recipe = require('../models/recipe')
 const User = require('../models/user')
-const {authHeader} = require('./test_utils/testHelper.js')
+const {authHeader, getTokenForUser} = require('./test_utils/testHelper.js')
 const api = supertest(app)
 
 
@@ -105,7 +105,7 @@ describe('with no recipies in the database', () => {
 })
 
 describe('with a recipe in the database', () => {
-    var testId;
+    let testId;
     const recipeParams = {
         name: "waffles",
         description: "yummy",
@@ -121,8 +121,10 @@ describe('with a recipe in the database', () => {
     }
 
     beforeEach(async () => {
+        recipeParams.user = initialUser.id
         let testRecipe = await Recipe.create(recipeParams)
         testId = testRecipe.id
+        
     })
 
     describe('GET /api/recipes/:id', () => {
@@ -138,33 +140,102 @@ describe('with a recipe in the database', () => {
 
     
     describe('PUT /api/recipes/:id', () => {
+        let modifiedRecipe;
+        beforeEach(() => {
+            modifiedRecipe = {...recipeParams}
+            modifiedRecipe.calories = 400;
+        })
+
         test('updates an existing recipe with that id', async () => {
-            let newRecipe = {...recipeParams}
-            newRecipe.calories = 400;
             let response = await api.put(`/api/recipes/${testId}`)
                 .set(authHeader(initialUserToken))
-                .send(newRecipe)
+                .send(modifiedRecipe)
                 .expect(200)
 
-            expect(response.body).toMatchObject(newRecipe)
+            expect(response.body).toMatchObject(modifiedRecipe)
             expect(response.body.id).toMatch(testId)
         })
 
         test('returns error 404 if no recipe with that id exists', async () => {
-            let newRecipe = {...recipeParams}
             let response = await api.put(`/api/recipes/a402cdd2c9e0600bfea94283`)
                 .set(authHeader(initialUserToken))
-                .send(newRecipe)
+                .send(modifiedRecipe)
                 .expect(404)
         })
+
+        test("owner's token must be provided to delete a recipe", async () => {
+            let response = await api.put(`/api/recipes/${testId}`)
+                .set(authHeader(initialUserToken))
+                .send(modifiedRecipe)
+                .expect(200)
+        })
+
+        test("401 error response when trying to modify a recipe without a token in the header", async () => {
+            let testRecipe = {
+                name: "waffles",
+                user: initialUser.id
+            }
+            await api.put(`/api/recipes/${testId}`).send(testRecipe).expect(401)
+        })
+
+        test("401 error response if the token is from a user who is not owner of the recipe", async () => {
+            let user2Info = {
+                username: "user2",
+                password: "something",
+                email: "test@test.com"
+            }
+            await api.post('/api/users').send(user2Info)
+            let user2token = await getTokenForUser(api, user2Info.username, user2Info.password)
+            
+            
+            await api.put(`/api/recipes/${testId}`)
+            .set(authHeader(user2token))
+            .send(modifiedRecipe)
+            .expect(401)
+
+
+        })
+
+       
     })
     
     describe('DELETE /api/recipes/:id', () => {
         test('deletes the recipe with the specified id', async () => {
             await api.delete(`/api/recipes/${testId}`).set(authHeader(initialUserToken)).expect(204)
-            await api.get(`/api/recipes/${testId}`).expect(404)
+            let exists = await Recipe.exists({_id: testId})
+            expect(exists).toBeFalsy();
+        })
+
+        test("owner's token must be provided to delete a recipe", async () => {
+            await api.delete(`/api/recipes/${testId}`)
+                .set(authHeader(initialUserToken))
+                .expect(204)
+        })
+
+        test("401 error response when trying to delete a recipe without a token in the header", async () => {
+            await api.delete(`/api/recipes/${testId}`).expect(401)
+        })
+
+        test("401 error response if the token is from a user who is not owner of the recipe", async () => {
+            let user2Info = {
+                username: "user2",
+                password: "something",
+                email: "test@test.com"
+            }
+            await api.post('/api/users').send(user2Info)
+            let user2token = await getTokenForUser(api, user2Info.username, user2Info.password)
+            
+            
+            await api.delete(`/api/recipes/${testId}`)
+            .set(authHeader(user2token))
+            .expect(401)
+
+
         })
     })
+
+    
+
 })
 
 describe('with multiple recipies in the database', () => {

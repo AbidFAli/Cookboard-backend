@@ -13,23 +13,29 @@ usersRouter.get('/', async (request, response) => {
   response.json(users)
 })
 
-//maybe secure this/make it not publicly accessible if there is user info you want to keep secret
-//or only allow it during test?
-//TODO: swap this with the login 
-usersRouter.get('/:id', async (request, response, next) => {
-  const user = await User.findById(request.params.id).populate('recipes', recipeInfoToPopulate)
-  if(user){
-    response.json(user)
-  }
-  else{
-    response.status(404)
-  }
-})
+if(process.env.NODE_ENV === 'test'){
+  usersRouter.get('/:id', async (request, response) => {
+    const user = await User.findById(request.params.id).populate('recipes', recipeInfoToPopulate)
+    if(user){
+      response.json(user)
+    }
+    else{
+      response.status(404)
+    }
+  })
+}
 
+/*
+body = {
+  username: String,
+  email: String,
+  password: String
+}
+*/
 usersRouter.post('/', async (request, response, next) => {
   const body = request.body;
   try{
-    if(body.password.length < 3){
+    if(body.password && body.password.length < 3){
       throw new Error(PASSWORD_ERROR_MESSAGE)
     }
   }

@@ -40,5 +40,5 @@ describe('tests for login', () => {
 })
 
 afterAll(() => {
-  mongoose.connection.close()
+  mongoose.disconnect()
 });

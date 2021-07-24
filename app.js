@@ -16,20 +16,17 @@ const {useMethodsExcept} = require('./utils/middlewareHelper')
 const MONGODB_URI = config.MONGODB_URI
 
 mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, useFindAndModify: false })
-    .then(() => {
-        console.log('Connected to MongoDB')
-    })
     .catch((error) => {
         console.log('error connecting to MongoDB', error.message)
     });
 
-app.get('/', (request, response) => {
-    response.send('Hello World!')
-})
 
 app.use(cors())
 app.use(express.json())
-//app.use(morgan('dev'))
+if(process.env.NODE_ENV !== 'test'){
+    app.use(morgan('common'))
+}
+
 app.use('/api/login', loginRouter)
 app.use(middleware.tokenExtractor)
 app.use('/api/users', usersRouter)

@@ -33,7 +33,7 @@ const tokenExtractor = function(request, response, next) {
 }
 
 /*
-    Sets the request's user property to the User specified in the decoded token.
+    Sets request.user to the User specified in the decoded token.
     request.user can be null if the token is improperly formatted or does not exist.
 */
 const userExtractor = async function(request, response, next){
