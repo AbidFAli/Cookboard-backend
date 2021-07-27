@@ -4,13 +4,13 @@ const User = require('../models/user')
 
 const errorHandler = function(error, request, response, next){
     if(error.name === 'ValidationError' || error.name === 'JsonWebTokenError'){
-        return response.status(400).json({error: error.message})
+        response.status(400).json({errorName: error.name, error: error.message})
     }
     else if(error.name === 'TokenExpiredError'){
-        return response.status(403).json({error: error.message})
+        response.status(403).json({errorName: error.name, error: error.message})
     }else{
         console.log(error)
-        return response.status(400).json({error: error.message})
+        response.status(400).json({error: error.message})
     }
     next(error)
 }
@@ -42,7 +42,13 @@ const userExtractor = async function(request, response, next){
         return response.status(401).end()
     }
 
-    request.user = await User.findById(decodedToken.id)
+    try{
+        request.user = await User.findById(decodedToken.id)
+    }
+    catch(error){
+        next(error)
+    }
+    
     
     next()
 }

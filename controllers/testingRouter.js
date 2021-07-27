@@ -4,11 +4,15 @@ const User = require('../models/user')
 
 
 
-testingRouter.post('/reset', async (request, response) => {
-  await Recipe.deleteMany({})
-  await User.deleteMany({})
-
-  response.status(204).end()
+testingRouter.post('/reset', async (request, response, next) => {
+  try{
+    await Recipe.deleteMany({})
+    await User.deleteMany({})
+    response.status(204).end()
+  }
+  catch(error){
+    next(error)
+  }
 })
 
 module.exports = testingRouter

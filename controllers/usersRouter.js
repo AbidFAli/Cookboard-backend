@@ -8,22 +8,34 @@ const NUM_SALTS = 10;
 
 const recipeInfoToPopulate = {_id: 1, name: 1}
 
-usersRouter.get('/', async (request, response) => {
-  const users = await User.find({}).populate('recipes', recipeInfoToPopulate)
-  response.json(users)
+usersRouter.get('/', async (request, response, next) => {
+  try{
+    const users = await User.find({}).populate('recipes', recipeInfoToPopulate)
+    response.json(users)
+  }catch(error){
+    next(error)
+  }
 })
 
-if(process.env.NODE_ENV === 'test'){
-  usersRouter.get('/:id', async (request, response) => {
-    const user = await User.findById(request.params.id).populate('recipes', recipeInfoToPopulate)
+
+usersRouter.get('/:id', async (request, response, next) => {
+  let user = null;
+  try{
+    user = await User.findById(request.params.id).populate('recipes', recipeInfoToPopulate)
     if(user){
       response.json(user)
     }
     else{
       response.status(404)
     }
-  })
-}
+  }
+  catch(error){
+    next(error)
+  }
+  
+  
+})
+
 
 /*
 body = {
@@ -38,27 +50,19 @@ usersRouter.post('/', async (request, response, next) => {
     if(body.password && body.password.length < 3){
       throw new Error(PASSWORD_ERROR_MESSAGE)
     }
-  }
-  catch(exception){
-    next(exception)
-  }
 
-  const passwordHash = await bcrypt.hash(body.password, NUM_SALTS)
-
-  const user = new User({
-    username: body.username,
-    email: body.email,
-    passwordHash,
-  })
-
-  try{
+    const passwordHash = await bcrypt.hash(body.password, NUM_SALTS)
+    const user = new User({
+      username: body.username,
+      email: body.email,
+      passwordHash,
+    })
     const savedUser = await user.save()
     response.json(savedUser)
   }
-  catch(exception){
-    next(exception)
+  catch(error){
+    next(error)
   }
-
 })
 
 
