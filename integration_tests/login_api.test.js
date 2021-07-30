@@ -10,8 +10,8 @@ const api = supertest(app)
 
 
 beforeEach(async () => {
-  await User.deleteMany({})
   await Recipe.deleteMany({})
+  await User.deleteMany({})  
 })
 
 describe('tests for login', () => {
@@ -44,7 +44,7 @@ describe('tests for login', () => {
 
 
   describe('tests for GET /login/valid', () => {
-    const sendToken = async (token) => await api.get('/api/login/valid').send({token});
+    const sendToken = async (token) => await api.post('/api/login/valid').send({token});
 
     test('returns true if token is valid', async () => {
       let response = await api.post('/api/login').send(userInfo)

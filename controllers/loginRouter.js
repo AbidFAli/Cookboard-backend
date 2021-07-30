@@ -63,7 +63,7 @@ loginRouter.post('/', async (request, response, next) => {
  * tokenValid: bool  
  *}
  */
-loginRouter.get('/valid', async (request, response) => {
+loginRouter.post('/valid', async (request, response) => {
   let valid = false;
     try{
       if(request.body.token){

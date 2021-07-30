@@ -4,13 +4,12 @@ const User = require('../models/user')
 
 const errorHandler = function(error, request, response, next){
     if(error.name === 'ValidationError' || error.name === 'JsonWebTokenError'){
-        response.status(400).json({errorName: error.name, error: error.message})
+        return response.status(400).json({name: error.name, error: error.message})
     }
     else if(error.name === 'TokenExpiredError'){
-        response.status(403).json({errorName: error.name, error: error.message})
+        return response.status(403).json({name: error.name, error: error.message})
     }else{
         console.log(error)
-        response.status(400).json({error: error.message})
     }
     next(error)
 }

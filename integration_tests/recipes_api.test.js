@@ -15,8 +15,8 @@ let initialUserToken;
 
 
 beforeEach(async () => {
-    await User.deleteMany({})
     await Recipe.deleteMany({})
+    await User.deleteMany({})
     let initialUserInfo = {
         username: "AbidAli",
         password: "password",

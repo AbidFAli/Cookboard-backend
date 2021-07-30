@@ -10,8 +10,8 @@ const api = supertest(app)
 
 
 beforeEach(async () => {
-  await User.deleteMany({})
   await Recipe.deleteMany({})
+  await User.deleteMany({})
 })
 
 describe('tests for POST /api/users', () => {
