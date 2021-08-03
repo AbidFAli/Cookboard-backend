@@ -5,7 +5,7 @@ const app = require('../app')
 const Recipe = require('../models/recipe')
 const User = require('../models/user')
 const {authHeader, getTokenForUser} = require('./test_utils/testHelper.js')
-
+const { UserCreationError } = require('../utils/errors')
 const api = supertest(app)
 
 
@@ -15,16 +15,26 @@ beforeEach(async () => {
 })
 
 describe('tests for POST /api/users', () => {
+  let user = {
+    username: "Abid",
+    password: "password",
+    email: "test@test.com"
+  }
+
   test('a new user can be created', async () => {
-    let user = {
-      username: "Abid",
-      password: "password",
-      email: "test@test.com"
-    }
-  
     let response = await api.post('/api/users').send(user);
     let createdUser = response.body;
     expect(createdUser.id).toBeDefined();
+  })
+
+  test('a UsernameTakenError will be returned if a user with the provided username already exists', async () => {
+     await api.post('/api/users').send(user)
+     await api.post('/api/users').send(user).expect(response => {
+      if(response.body.name !== UserCreationError.name 
+        || response.body.error !== UserCreationError.MESSAGE_NONUNIQUE_USERNAME){
+        throw new Error()
+      }
+     });
   })
 })
 
@@ -100,6 +110,8 @@ describe('tests for GET /api/users/:id', () => {
 
 })
 
-afterAll(() => {
+afterAll(async () => {
+  await Recipe.deleteMany({})
+  await User.deleteMany({})
   mongoose.connection.close()
 });

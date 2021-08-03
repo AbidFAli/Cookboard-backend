@@ -1,10 +1,19 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
+const {UserCreationError} = require('./errors')
+
+
 
 
 const errorHandler = function(error, request, response, next){
     if(error.name === 'ValidationError' || error.name === 'JsonWebTokenError'){
-        return response.status(400).json({name: error.name, error: error.message})
+        let errorToSend = {name: error.name, error: error.message}
+        if(error.message.match(/expected `username` to be unique/)){
+            errorToSend = {name: UserCreationError.name, error: UserCreationError.MESSAGE_NONUNIQUE_USERNAME}
+        }
+        
+        return response.status(400).json(errorToSend)
+        
     }
     else if(error.name === 'TokenExpiredError'){
         return response.status(403).json({name: error.name, error: error.message})
@@ -36,12 +45,13 @@ const tokenExtractor = function(request, response, next) {
     request.user can be null if the token is improperly formatted or does not exist.
 */
 const userExtractor = async function(request, response, next){
-    let decodedToken = request.token ? jwt.verify(request.token, process.env.SECRET) : null
-    if(!decodedToken || !decodedToken.id){
-        return response.status(401).end()
-    }
+    
 
     try{
+        let decodedToken = request.token ? jwt.verify(request.token, process.env.SECRET) : null
+        if(!decodedToken || !decodedToken.id){
+            return response.status(401).end()
+        }
         request.user = await User.findById(decodedToken.id)
     }
     catch(error){
