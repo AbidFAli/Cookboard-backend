@@ -1,8 +1,7 @@
-const config = require('./utils/config')
+const mongoHelper = require('./utils/mongoHelper')
 const express = require('express')
 const app = express()
 const cors = require('cors')
-const mongoose = require('mongoose')
 const morgan = require('morgan')
 
 const usersRouter = require('./controllers/usersRouter')
@@ -12,12 +11,7 @@ const loginRouter = require('./controllers/loginRouter')
 const middleware = require('./utils/middleware')
 const {useMethodsExcept} = require('./utils/middlewareHelper')
 
-const MONGODB_URI = config.MONGODB_URI
-
-mongoose.connect(MONGODB_URI, {useNewUrlParser: true, useCreateIndex: true, useUnifiedTopology: true, useFindAndModify: false })
-    .catch((error) => {
-        console.log('error connecting to MongoDB', error.message)
-    });
+mongoHelper.connectToMongo()
 
 
 app.use(cors())

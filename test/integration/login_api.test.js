@@ -1,8 +1,8 @@
 const supertest = require('supertest')
 const mongoose = require('mongoose')
-const app = require('../app')
-const Recipe = require('../models/recipe')
-const User = require('../models/user')
+const app = require('../../src/app')
+const Recipe = require('../../src/models/recipe')
+const User = require('../../src/models/user')
 const jwt = require('jsonwebtoken')
 
 

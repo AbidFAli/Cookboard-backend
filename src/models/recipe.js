@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const {ingredientSchema} = require('./ingredient')
+const {COLLATION_OPTION} = require('../utils/modelHelper')
 
 const recipeSchema = new mongoose.Schema({
     name: {
@@ -28,6 +29,8 @@ const recipeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User'
     }
+}, {
+    autoIndex: false
 })
 
 //renames _id to id when recipe is returned as json from MongoDB
@@ -39,4 +42,9 @@ recipeSchema.set('toJSON', {
     }
 })
 
-module.exports = mongoose.model('Recipe', recipeSchema)
+
+recipeSchema.index({name: 1, rating: -1}, COLLATION_OPTION)
+recipeSchema.index({user: 1})
+recipeSchema.index({"ingredients.name" : 1}, COLLATION_OPTION)
+const Recipe = mongoose.model('Recipe', recipeSchema)
+module.exports = Recipe;

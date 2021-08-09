@@ -30,6 +30,16 @@ recipesRouter.get('/:id', async (request, response, next) => {
     
     
 })
+
+// recipesRouter.get('/search', async (request, response, next) => {
+//     let typeError = false;
+//     let query;
+//     let filter = {}
+//     if(req.query.name){
+//         typeError = typeError || typeof(req.query.name) !== 'string'
+//         filter.name = 
+//     }
+// })
 /*
     Example Request Header: {'Authorization': 'Bearer yourTokenHere'}
 */

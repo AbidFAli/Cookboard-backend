@@ -1,5 +1,5 @@
-const config = require('./utils/config')
-const app = require('./app')
+const config = require('./src/utils/config') //inits environment variables
+const app = require('./src/app')
 const http = require('http')
 
 
