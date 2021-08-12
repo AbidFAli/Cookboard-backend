@@ -127,14 +127,17 @@ describe('with a recipe in the database', () => {
         
     })
 
+    //this breaks
     describe('GET /api/recipes/:id', () => {
-        test('retrieves the recipe with the matching id', async () => {
-            let response = await api.get(`/api/recipes/${testId}`).expect(200).expect('Content-Type', /application\/json/)
+        test.only('retrieves the recipe with the matching id', async () => {
+            let path = `/api/recipes/${testId}`
+            let response = await api.get(path).expect(200).expect('Content-Type', /application\/json/)
             expect(response.body).toMatchObject(recipeParams)
         })
 
         test('returns error 404 when no recipe with that id exists', async () => {
-            await api.get(`/api/recipes/a402cdd2c9e0600bfea94283`).expect(404)
+            let fakeId = "a2".repeat(12)
+            await api.get(`/api/recipes${fakeId}`).expect(404)
         })
     })
 
@@ -251,6 +254,10 @@ describe('with multiple recipies in the database', () => {
         {
             name: "pancakes",
             description: "syrupy"
+        },
+        {
+            name: "cinnamon pancakes",
+            description: "cinnamony"
         }
     ]
     beforeEach(async () => {
@@ -272,6 +279,45 @@ describe('with multiple recipies in the database', () => {
         });
 
     });
+
+    describe('GET /api/recipes/search', () => {
+        describe('when searching by name', () => {
+            test('returns one recipe if it is the only match', async () => {
+                let response = await api.get('/api/recipes/search?name=waffles')
+                let recipes = response.body
+                expect(recipes).toHaveLength(1)
+                expect(recipes[0]).toMatchObject(recipeList[0])
+            })
+
+            test('can return multiple matching recipes', async () => {
+                let response = await api.get('/api/recipes/search?name=pancakes]')
+                let recipes = response.body
+                let expectedRecipes = [recipeList[2], recipeList[3]]
+                for( let expectedRecipe of expectedRecipes){
+                    let recieved = recipes.find((recipe) => recipe.name === expectedRecipe.name)
+                    expect(recieved).toMatchObject(expectedRecipe)
+                }
+            })
+
+            test('matching recipes are sorted by textScore', async () => {
+                let response = await api.get('/api/recipes/search?name=pancakes]')
+                let recipes = response.body
+                let isSorted = true;
+                for(let i=1; i<recipes.length - 1; i++){
+                    isSorted = isSorted && recipes[i] > recipes[i+1]
+                }
+                expect(isSorted).toBeTruthy()
+            })
+
+            test('returns an HTTP status 200 if no recipes matched', async () => {
+                await api.get('/api/recipes/search?name=nothing]').expect(204)
+            })
+
+        })
+
+
+        
+    })
 })
 
 afterAll(() => {

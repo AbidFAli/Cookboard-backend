@@ -3,16 +3,15 @@ const Recipe = require('../src/models/recipe')
 
 const run = async () => {
   console.log('Node env is ' + process.env.NODE_ENV)
-  await mongoHelper.connectToMongo()
 
-  Recipe.ensureIndexes().then(error => {
-    if(error && error.message){
-      console.log(error)
-    }
-    else{
-      console.log('Success')
-    }
-  })
+  try{
+    await mongoHelper.connectToMongo()
+    await Recipe.syncIndexes()
+    console.log('Indexes created')
+  }catch(error){
+    console.log(error)
+  }
+  return
 }
 
 run()

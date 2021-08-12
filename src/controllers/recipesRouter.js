@@ -14,7 +14,7 @@ recipesRouter.get('/', async (request, response, next) => {
     }
 })
 
-recipesRouter.get('/:id', async (request, response, next) => {
+recipesRouter.get('/:id([a-f\\d]{24})', async (request, response, next) => {
     const id = request.params.id;
     try{
         const recipe = await Recipe.findById(id)
@@ -27,19 +27,44 @@ recipesRouter.get('/:id', async (request, response, next) => {
     catch(error){
         next(error)
     }
-    
-    
 })
 
-// recipesRouter.get('/search', async (request, response, next) => {
-//     let typeError = false;
-//     let query;
-//     let filter = {}
-//     if(req.query.name){
-//         typeError = typeError || typeof(req.query.name) !== 'string'
-//         filter.name = 
-//     }
-// })
+recipesRouter.get('/search', async (request, response, next) => {
+    let typeError = false;
+    let filter = {}
+    let projection = {}
+    let options = {}
+    if(request.query.name && typeof(request.query.name) === 'string'){
+        filter['$text'] = { $search: request.query.name } 
+        projection.score = {"$meta": "textScore"}
+        options.sort = {score: 1}
+    }
+    else if(request.query.name){
+        typeError = true;
+    }
+
+    if(typeError){
+        return response.status(400).end()
+    }
+
+    try{
+        let recipes = await Recipe.find(filter, projection, options)
+        if(recipes.length === 0){
+            response.status(204).end()
+        }
+        else{
+            response.json(recipes)
+        }
+        
+    }
+    catch(error){
+        next(error)
+    }
+       
+    
+
+})
+
 /*
     Example Request Header: {'Authorization': 'Bearer yourTokenHere'}
 */

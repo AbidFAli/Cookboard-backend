@@ -43,8 +43,10 @@ recipeSchema.set('toJSON', {
 })
 
 
-recipeSchema.index({name: 1, rating: -1}, COLLATION_OPTION)
-recipeSchema.index({user: 1})
+recipeSchema.index({name: "text", rating: -1}, COLLATION_OPTION) //change this to use AtlasSearch
+recipeSchema.index({user: 1, "ingredients.name": 1},  COLLATION_OPTION)
+recipeSchema.index({user: 1, rating: -1})
+recipeSchema.index({rating: -1})
 recipeSchema.index({"ingredients.name" : 1}, COLLATION_OPTION)
 const Recipe = mongoose.model('Recipe', recipeSchema)
 module.exports = Recipe;
