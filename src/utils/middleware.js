@@ -1,19 +1,19 @@
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const {UserCreationError} = require('./errors')
+const {includes} = require('lodash')
 
 
 
 
 const errorHandler = function(error, request, response, next){
-    if(error.name === 'ValidationError' || error.name === 'JsonWebTokenError'){
+    const errors400 = ['ValidationError', 'JsonWebTokenError', 'SearchError']
+    if(includes(errors400, error.name)){
         let errorToSend = {name: error.name, error: error.message}
         if(error.message.match(/expected `username` to be unique/)){
             errorToSend = {name: UserCreationError.name, error: UserCreationError.MESSAGE_NONUNIQUE_USERNAME}
         }
-        
         return response.status(400).json(errorToSend)
-        
     }
     else if(error.name === 'TokenExpiredError'){
         return response.status(403).json({name: error.name, error: error.message})
