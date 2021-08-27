@@ -1,0 +1,24 @@
+{
+  "name": "name_ingredient_rating",
+  "analyzer": "lucene.standard",
+  "searchAnalyzer" : "lucene.standard",
+  "mappings": {
+    "dynamic" : false,
+    "fields": {
+      "name": {
+        "type": "string"
+      },
+      "rating" : {
+        "type": "number"
+      },
+      "ingredients": {
+          "type" : "document",
+          "fields" : {
+            "name": {
+              "type": "string"
+            }
+          }
+      }
+    }
+  }
+}

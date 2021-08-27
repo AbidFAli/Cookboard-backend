@@ -1,0 +1,2 @@
+GET http://localhost:3001/api/recipes/search?name=Test&ingredient=&ratingMin=0&ratingMax=5&count=true
+Content-Type: application/json
