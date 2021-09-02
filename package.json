@@ -13,6 +13,11 @@
   "author": "Abid Ali",
   "license": "MIT",
   "dependencies": {
+    "@aws-sdk/client-lambda": "^3.29.0",
+    "@aws-sdk/client-s3": "^3.29.0",
+    "@aws-sdk/credential-providers": "^3.29.0",
+    "@aws-sdk/s3-presigned-post": "^3.29.0",
+    "@aws-sdk/s3-request-presigner": "^3.29.0",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
@@ -22,7 +27,9 @@
     "lodash": "^4.17.21",
     "mongoose": "^5.13.8",
     "mongoose-unique-validator": "^2.0.3",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "path-to-regexp": "^6.2.0",
+    "uuid": "^8.3.2"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",
