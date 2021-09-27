@@ -1,6 +1,5 @@
 const {
   deletePhotosFromS3,
-  getS3Client,
   PHOTO_BUCKET_NAME,
 } = require("./recipesPhotoRouterHelper");
 

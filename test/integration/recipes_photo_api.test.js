@@ -8,7 +8,6 @@ const User = require("../../src/models/user");
 
 const testHelper = require("./test_utils/testHelper.js");
 const mongoHelper = require("../../src/utils/mongoHelper");
-const recipesPhotoHelper = require("../../src/utils/controllers/recipesPhotoRouterHelper");
 const photoTestHelper = require("./test_utils/photoTestHelper.js");
 
 const {
@@ -121,6 +120,7 @@ describe("tests for PUT /photos", () => {
       .expect(400);
   });
 
+  //maybe turn router code into functions and just test that delete gets called with the right keys
   test("deletes images from s3 for photos that are replaced", async () => {
     const prefix = photoTestHelper.TEST_PREFIX;
     const recipeInfo = {
@@ -151,6 +151,33 @@ describe("tests for PUT /photos", () => {
       );
       expect(result).toBeTruthy();
     }
+  });
+
+  test("can edit the caption for an existing photo", async () => {
+    const prefix = photoTestHelper.TEST_PREFIX;
+    const oldPhoto = {
+      key: `${prefix}/something`,
+      caption: "caption",
+    };
+    const recipeInfo = {
+      name: "Tandoori Chicken",
+      user: initialUser.id,
+      photos: [oldPhoto],
+    };
+    let response = await Recipe.create([recipeInfo]);
+    let recipe = response[0];
+
+    let newCaption = "something else";
+    const body = {
+      photos: [{ key: oldPhoto.key, caption: newCaption }],
+    };
+    await api
+      .put(`/api/recipes/${recipe.id}/photos/`)
+      .set(testHelper.authHeader(initialUserToken))
+      .send(body);
+
+    recipe = await Recipe.findById(recipe.id).setOptions({ session });
+    expect(recipe.photos[0]).toMatchObject(body.photos[0]);
   });
 });
 

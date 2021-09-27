@@ -11,7 +11,7 @@ const {
 } = require("@aws-sdk/client-s3");
 
 const s3Client = getS3Client();
-const TEST_PREFIX = "/test/recipes";
+const TEST_PREFIX = "test/recipes";
 
 const getTestPhotos = async () => {
   const params = {
