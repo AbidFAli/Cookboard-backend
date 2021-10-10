@@ -3,17 +3,14 @@ const mongoose = require("mongoose");
 const app = require("../../src/app");
 const Recipe = require("../../src/models/recipe");
 const User = require("../../src/models/user");
-const { authHeader, getTokenForUser } = require("./test_utils/testHelper.js");
+const {
+  authHeader,
+  getTokenForUser,
+  createUser,
+} = require("./test_utils/testHelper.js");
 const api = supertest(app);
 const recipeFixtures = require("./fixtures/recipeFixtures");
 const mongoHelper = require("../../src/utils/mongoHelper");
-const {
-  beforeEach,
-  test,
-  expect,
-  describe,
-  afterAll,
-} = require("@jest/globals");
 
 let initialUser;
 let initialUserToken;
@@ -28,10 +25,7 @@ beforeEach(async () => {
     password: "password",
     email: "test@test.com",
   };
-  let response = await api.post("/api/users").send(initialUserInfo);
-  initialUser = response.body;
-  response = await api.post("/api/login").send(initialUserInfo);
-  initialUserToken = response.body.token;
+  ({ initialUser, initialUserToken } = await createUser(api, initialUserInfo));
 });
 
 describe("with no recipies in the database", () => {
@@ -150,7 +144,6 @@ describe("with a recipe in the database", () => {
     testId = testRecipe.id;
   });
 
-  //this breaks
   describe("GET /api/recipes/:id", () => {
     test("retrieves the recipe with the matching id", async () => {
       let path = `/api/recipes/${testId}`;
