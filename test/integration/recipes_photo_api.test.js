@@ -121,7 +121,7 @@ describe("tests for PUT /photos", () => {
   });
 
   //maybe turn router code into functions and just test that delete gets called with the right keys
-  test.only("deletes images from s3 for photos that are replaced", async () => {
+  test("deletes images from s3 for photos that are replaced", async () => {
     const prefix = photoTestHelper.TEST_PREFIX;
     const recipeInfo = {
       name: "Tandoori Chiken",
