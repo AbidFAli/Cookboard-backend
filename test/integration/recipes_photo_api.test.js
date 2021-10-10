@@ -121,7 +121,7 @@ describe("tests for PUT /photos", () => {
   });
 
   //maybe turn router code into functions and just test that delete gets called with the right keys
-  test("deletes images from s3 for photos that are replaced", async () => {
+  test.only("deletes images from s3 for photos that are replaced", async () => {
     const prefix = photoTestHelper.TEST_PREFIX;
     const recipeInfo = {
       name: "Tandoori Chiken",
@@ -144,12 +144,11 @@ describe("tests for PUT /photos", () => {
       .send(body);
 
     //expect photos 2-4 not to have images in s3
-    promises = [];
     for (let i = 2; i < recipeInfo.photos.length; i++) {
       let result = await photoTestHelper.testPhotoExists(
         recipeInfo.photos[i].key
       );
-      expect(result).toBeTruthy();
+      expect(result).toBeFalsy();
     }
   });
 
