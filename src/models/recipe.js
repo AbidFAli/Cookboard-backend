@@ -25,6 +25,14 @@ const recipeSchema = new mongoose.Schema(
       servingSize: Number,
       unit: String,
     },
+    photos: [
+      {
+        key: String,
+        url: String,
+        caption: String,
+        title: String,
+      },
+    ],
     calories: Number,
     user: {
       type: mongoose.Schema.Types.ObjectId,
