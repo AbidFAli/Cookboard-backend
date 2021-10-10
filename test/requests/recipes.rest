@@ -22,3 +22,7 @@ Content-Type: application/json
     },
     "calories": 300
 }
+
+###
+GET http://localhost:3001/api/recipes/6090c02f998dd92530b86367
+Content-Type: application/json
