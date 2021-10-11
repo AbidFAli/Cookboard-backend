@@ -1,5 +1,5 @@
 require("dotenv").config();
-const { fromIni } = require("@aws-sdk/credential-providers");
+const { fromEnv } = require("@aws-sdk/credential-providers");
 
 const MONGODB_URI =
   process.env.NODE_ENV === "test"
@@ -8,10 +8,7 @@ const MONGODB_URI =
 const PORT = process.env.PORT;
 const AWS_REGION = "us-east-2";
 
-const AWS_CREDENTIALS = fromIni({
-  //if this doesnt work check your aws credential profile name
-  profile: "cookboard-backend",
-});
+const AWS_CREDENTIALS = fromEnv();
 
 module.exports = {
   MONGODB_URI,
