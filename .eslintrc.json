@@ -12,5 +12,6 @@
     "plugins": ["jest"],
     "rules": {
         "no-unused-vars" : ["warn"]
-    }
+    },
+    "parser": "@babel/eslint-parser"
 }
