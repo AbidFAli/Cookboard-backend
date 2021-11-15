@@ -3,9 +3,9 @@
 
 #stop app if already started
 #src: https://lifesaver.codes/answer/how-do-i-call-pm2-to-check-if-a-process-with-given-name-is-running
-sudo pm2 delete -s cookboard || :  
+pm2 delete -s cookboard || :  
 
 #start running the backend
-sudo pm2 start /opt/cookboard/back-end/index.js --name=cookboard 
+pm2 start /opt/cookboard/back-end/index.js --name=cookboard 
 
 sudo systemctl restart nginx #start ngingx

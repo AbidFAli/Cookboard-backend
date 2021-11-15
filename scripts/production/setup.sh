@@ -5,13 +5,14 @@ echo "
   NODE & NPM
 ----------------------
 "
+curl https://get.volta.sh | bash
 
+source ~/.bashrc
 
-# add nodejs ppa (personal package archive) from nodesource
-curl -fsSL https://deb.nodesource.com/setup_14.x | sudo -E bash -
+#big note, can't use sudo npm with volta
+volta install node@14
 
-# install nodejs and npm
-sudo apt-get install -y nodejs
+volta install npm@6
 
 echo "
 ----------------------
@@ -20,10 +21,10 @@ echo "
 "
 
 # install pm2 with npm
-sudo npm install -g pm2
+npm install -g pm2
 
 # set pm2 to start automatically on system startup
-sudo pm2 startup systemd
+pm2 startup systemd
 
 
 echo "
@@ -53,9 +54,10 @@ sudo ufw --force enable
 
 sudo git clone https://github.com/AbidFAli/Cookboard-backend /opt/cookboard/back-end
 
-cd /opt/cookboard/back-end && sudo npm install
+cd /opt/cookboard/back-end && sudo chown -R $(whoami) . && npm install
 
-sudo pm2 start index.js
+pm2 start index.js
 
 sudo git clone https://github.com/AbidFAli/Cookboard /opt/cookboard/front-end
-cd /opt/cookboard/front-end && sudo npm install -y && sudo npm run build
+cd /opt/cookboard/front-end && sudo chown -R $(whoami) . && npm install
+
