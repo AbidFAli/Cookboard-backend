@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 #Source: https://jasonwatmore.com/post/2019/11/18/react-nodejs-on-aws-how-to-deploy-a-mern-stack-app-to-amazon-ec2
+sudo apt-get update
+
 echo "
 ----------------------
   NODE & NPM
@@ -52,12 +54,27 @@ sudo ufw allow 'Nginx Full'
 # enable firewall
 sudo ufw --force enable
 
+
+
+
+echo "
+----------------------
+  Back End
+----------------------
+"
+# bcrypt dependencies
+sudo apt-get install -y build-essential python g++ 
+# rest
 sudo git clone https://github.com/AbidFAli/Cookboard-backend /opt/cookboard/back-end
-
-cd /opt/cookboard/back-end && sudo chown -R $(whoami) . && npm install
-
+cd /opt/cookboard/back-end && sudo chown -R $(whoami): . && npm install
 pm2 start index.js
 
+echo "
+----------------------
+  Front End
+----------------------
+"
 sudo git clone https://github.com/AbidFAli/Cookboard /opt/cookboard/front-end
-cd /opt/cookboard/front-end && sudo chown -R $(whoami) . && npm install
+cd /opt/cookboard/front-end && sudo chown -R $(whoami): . && npm install --production #dont need the dev dependencies for frontend
+
 
