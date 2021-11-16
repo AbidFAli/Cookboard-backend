@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-sudo rm /etc/nginx/sites-available/default
-sudo cp /opt/cookboard/back-end/scripts/production/nginx_config /etc/nginx/sites-available/default
+NGINX_PATH=/etc/nginx/sites-available/default
+sudo rm $NGINX_PATH
+sudo cp /opt/cookboard/back-end/scripts/production/nginx_config $NGINX_PATH
 
-STAT=$(sudo service nginx status)
-if [[ "$STAT" =~ is[[:space:]]running ]]; then
+STAT=$(ps -e | grep nginx)
+if [[ -n "$STAT" ]]; then
   sudo nginx -s reload
 fi
