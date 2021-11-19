@@ -10,6 +10,8 @@ server {
 
   # node api reverse proxy
   location /api/ {
-    proxy_pass http://localhost:3001/;
+    # don't include the trailing / after the port or nginx will replace /api/ in the original URL with what follows proxy_pass
+    # see https://nginx.org/en/docs/http/ngx_http_proxy_module.html#proxy_pass
+    proxy_pass http://localhost:3001;
   }
 }

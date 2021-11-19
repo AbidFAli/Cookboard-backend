@@ -6,5 +6,5 @@ sudo cp /opt/cookboard/back-end/scripts/production/nginx_config $NGINX_PATH
 
 STAT=$(ps -e | grep nginx)
 if [[ -n "$STAT" ]]; then
-  sudo nginx -s reload
+  sudo systemctl reload nginx
 fi
