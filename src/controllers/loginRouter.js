@@ -2,7 +2,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const loginRouter = require("express").Router();
 const User = require("../models/user");
-const mongoHelper = require("../utils/mongoHelper");
+const mongoose = require("mongoose");
 
 const recipeInfoToPopulate = { _id: 1, name: 1 };
 
@@ -22,8 +22,9 @@ const TOKEN_EXPIRATION_TIME = "7d";
  */
 loginRouter.post("/", async (request, response, next) => {
   const body = request.body;
-  const session = await mongoHelper.getSession();
+  let session;
   try {
+    session = await mongoose.startSession();
     const user = await User.findOne({ username: body.username })
       .session(session)
       .readConcern("majority")
@@ -54,6 +55,8 @@ loginRouter.post("/", async (request, response, next) => {
     }
   } catch (error) {
     next(error);
+  } finally {
+    session.endSession();
   }
 });
 

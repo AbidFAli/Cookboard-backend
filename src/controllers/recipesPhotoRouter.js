@@ -1,10 +1,10 @@
 const recipesPhotoRouter = require("express").Router({ mergeParams: true });
-const Recipe = require("../models/recipe");
+const { Recipe } = require("../models/recipe");
 
 const { createPresignedPost } = require("@aws-sdk/s3-presigned-post");
 
 const photoHelper = require("../utils/controllers/recipesPhotoRouterHelper");
-const mongoHelper = require("../utils/mongoHelper");
+const mongoose = require("mongoose");
 
 const PRESIGNED_POST_EXPIRATION_TIME = 600; //seconds
 const PHOTO_SIZE_LIMIT = 10 * 1024 * 1024; //bytes
@@ -25,9 +25,10 @@ const PHOTO_SIZE_LIMIT = 10 * 1024 * 1024; //bytes
 recipesPhotoRouter.post("/uploadUrl", async (request, response, next) => {
   const id = request.params.id;
   const fileName = request.body.fileName;
-  const mongoSession = await mongoHelper.getSession();
+  let mongoSession;
 
   try {
+    mongoSession = await mongoose.startSession();
     const recipe = await Recipe.findById(id)
       .readConcern("majority")
       .session(mongoSession);
@@ -58,6 +59,8 @@ recipesPhotoRouter.post("/uploadUrl", async (request, response, next) => {
     return response.json({ url, fields });
   } catch (error) {
     next(error);
+  } finally {
+    mongoSession.endSession();
   }
 });
 
@@ -77,12 +80,13 @@ recipesPhotoRouter.post("/uploadUrl", async (request, response, next) => {
 */
 recipesPhotoRouter.put("/", async (request, response, next) => {
   const recipeId = request.params.id;
-  const mongoSession = await mongoHelper.getSession();
+  let mongoSession;
   if (!request.body.photos) {
     return response.status(400).end();
   }
 
   try {
+    mongoSession = await mongoose.startSession();
     const newPhotos = request.body.photos.map((photo) => {
       return {
         key: photo.key,
@@ -129,6 +133,8 @@ recipesPhotoRouter.put("/", async (request, response, next) => {
     return response.status(200).end();
   } catch (error) {
     next(error);
+  } finally {
+    mongoSession.endSession();
   }
 });
 
@@ -140,12 +146,13 @@ recipesPhotoRouter.put("/", async (request, response, next) => {
 recipesPhotoRouter.delete("/", async (request, response, next) => {
   const recipeId = request.params.id;
   const keys = request.body.keys;
-  const mongoSession = await mongoHelper.getSession();
+  let mongoSession;
 
   if (!keys || keys.length === 0) {
     return response.status(400).end();
   }
   try {
+    mongoSession = await mongoose.startSession();
     const deletePicPromise = photoHelper.deletePhotosFromS3(
       photoHelper.PHOTO_BUCKET_NAME,
       keys
@@ -173,6 +180,8 @@ recipesPhotoRouter.delete("/", async (request, response, next) => {
     return response.status(204).end();
   } catch (error) {
     next(error);
+  } finally {
+    mongoSession.endSession();
   }
 });
 module.exports = {

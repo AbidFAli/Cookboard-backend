@@ -1,7 +1,7 @@
 const supertest = require("supertest");
 const mongoose = require("mongoose");
 const app = require("../../src/app");
-const Recipe = require("../../src/models/recipe");
+const { Recipe } = require("../../src/models/recipe");
 const User = require("../../src/models/user");
 const {
   authHeader,
@@ -10,14 +10,15 @@ const {
 } = require("./test_utils/testHelper.js");
 const api = supertest(app);
 const recipeFixtures = require("./fixtures/recipeFixtures");
-const mongoHelper = require("../../src/utils/mongoHelper");
 
 let initialUser;
 let initialUserToken;
 let session;
+beforeAll(async () => {
+  session = await mongoose.startSession();
+});
 
 beforeEach(async () => {
-  session = await mongoHelper.getSession();
   await Recipe.deleteMany({}).session(session);
   await User.deleteMany({}).session(session);
   let initialUserInfo = {
@@ -26,6 +27,10 @@ beforeEach(async () => {
     email: "test@test.com",
   };
   ({ initialUser, initialUserToken } = await createUser(api, initialUserInfo));
+});
+
+afterAll(async () => {
+  session.endSession();
 });
 
 describe("with no recipies in the database", () => {
