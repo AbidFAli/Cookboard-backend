@@ -6,6 +6,7 @@ const helper = require("../utils/controllers/recipesRouterHelper");
 const mongoHelper = require("../utils/mongoHelper");
 const { recipeRatingsRouter } = require("./recipeRatingsRouter");
 const mongoose = require("mongoose");
+const { isArray } = require("lodash");
 
 recipesRouter.use(`/:id(${ID_ROUTE_REGEX})/photos`, recipesPhotoRouter);
 recipesRouter.use("/ratings", recipeRatingsRouter);
@@ -26,17 +27,6 @@ recipesRouter.get("/", async (request, response, next) => {
   }
 });
 
-/*
- * Query parameters: {
- * name: String; the name of the recipe to search for,
- * ingredient: String; the name of the ingredient to search for,
- * ratingMin: Number;
- * ratingMax: Number;
- * count: Number; whether to return recipes or a count of the number of recipes matching the search criteria;
- * start: Number; the position(starts at 0) of the recipe in the search results from which to begin returning.
- *   Ignored if params.count is provided
- *}
- */
 recipesRouter.get(
   `/:id(${ID_ROUTE_REGEX})`,
   async (request, response, next) => {
@@ -61,6 +51,17 @@ recipesRouter.get(
   }
 );
 
+/*
+ * Query parameters: {
+ * name: String; the name of the recipe to search for,
+ * ingredient: String; the name of the ingredient to search for,
+ * ratingMin: Number;
+ * ratingMax: Number;
+ * count: Number; whether to return recipes or a count of the number of recipes matching the search criteria;
+ * start: Number; the position(starts at 0) of the recipe in the search results from which to begin returning.
+ *   Ignored if params.count is provided
+ *}
+ */
 //sort priority: name, rating,
 recipesRouter.get("/search", async (request, response, next) => {
   let session;
@@ -145,7 +146,27 @@ recipesRouter.put(
         return response.status(404).end();
       } else if (recipe.user.toString() === request.user.id) {
         let newRecipe = request.body;
-        recipe.set(newRecipe);
+
+        const properties = [
+          "name",
+          "description",
+          "instructions",
+          "ingredients",
+          "avgRating",
+          "numRatings",
+          "timeToMake",
+          "servingInfo",
+          "photos",
+          "calories",
+          "user",
+        ];
+
+        for (let prop of properties) {
+          if (newRecipe[prop] !== null && newRecipe[prop] !== undefined) {
+            recipe[prop] = newRecipe[prop];
+          }
+        }
+
         let updatedRecipe = await recipe.save();
         response.send(updatedRecipe);
       } else if (recipe.user.toString() !== request.user.id) {

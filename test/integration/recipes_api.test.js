@@ -226,6 +226,16 @@ describe("with a recipe in the database", () => {
         .send(modifiedRecipe)
         .expect(401);
     });
+
+    test("won't add new data that isn't in the schema", async () => {
+      modifiedRecipe.extra = "extra";
+      let response = await api
+        .put(`/api/recipes/${testId}`)
+        .set(authHeader(initialUserToken))
+        .send(modifiedRecipe)
+        .expect(200);
+      expect(response.body.extra).toBeUndefined();
+    });
   });
 
   describe("DELETE /api/recipes/:id", () => {
