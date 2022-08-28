@@ -4,10 +4,12 @@ const { Recipe } = require("../models/recipe");
 
 //3 options: getByUserID, getByRecipeId, getOne(userId, recipeId)
 /*
- *query params:
+  GET /api/recipes/ratings?recipe=<recipeId>?userId=<id>
+
+query params
     recipe: optional,
     userId: optional,
- *@returns [Rating]
+ @returns [Rating]
 */
 recipeRatingsRouter.get("/", async (request, response, next) => {
   try {

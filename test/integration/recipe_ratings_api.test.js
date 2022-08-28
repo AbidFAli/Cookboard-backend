@@ -64,8 +64,12 @@ describe("tests for GET /api/recipes/ratings", () => {
       .set(authHeader(initialUserToken));
     let retrievedRatings = response.body;
     expect(retrievedRatings).toHaveLength(1);
+
+    //alternatively, match every field and then have a custom matcher for recipe, which would allow the structure of the recipe to change.
     expect(retrievedRatings[0]).toMatchObject({
-      ...ratingParams,
+      value: ratingParams.value,
+      userId: ratingParams.userId,
+      recipe: { id: ratingParams.recipe },
       id: initialRating.id,
     });
   });
@@ -85,6 +89,10 @@ describe("tests for GET /api/recipes/ratings", () => {
       return one.value - two.value;
     };
     retreivedRatings.sort(ratingComparator);
+    fiveRatings = fiveRatings.map((rating) => {
+      rating.recipe = { id: rating.recipe };
+      return rating;
+    });
     expect(retreivedRatings).toMatchObject(fiveRatings);
   });
 
@@ -101,6 +109,10 @@ describe("tests for GET /api/recipes/ratings", () => {
     let retreivedRatings = response.body;
 
     retreivedRatings.sort(ratingComparator);
+    fiveRatings = fiveRatings.map((rating) => {
+      rating.recipe = { id: rating.recipe };
+      return rating;
+    });
     expect(retreivedRatings).toMatchObject(fiveRatings);
   });
 
