@@ -5,6 +5,12 @@ const { Rating } = require("./rating");
 
 const MAX_RATING = 5;
 
+class RecipeError extends Error {
+  constructor(msg, options) {
+    super(msg, options);
+  }
+}
+
 const recipeSchema = new mongoose.Schema(
   {
     name: {
@@ -75,35 +81,159 @@ recipeSchema.index({ avgRating: -1 });
 
 //computes the average using formula: newAvg = avgRating + (newRating - avgRating) / ( numRatings + 1)
 //and returns a copy of the recipe with the updated rating.
-//@param options: {
-//  noDoc: True| False. If true, returns the updated recipe. If false, returns an empty documnet.
-//}
+//@param {string} id: id of the recipe
+//@param {int} newRating: rating to be added
 recipeSchema.statics.addRating = async function (id, newRating, options) {
   //subtract = 1st arg - 2nd arg
   let top = { $subtract: [newRating, "$avgRating"] };
   let bottom = { $add: [1, "$numRatings"] };
-  await mongoose.model("Recipe").updateOne({ _id: id }, [
-    {
-      $set: {
-        avgRating: { $add: ["$avgRating", { $divide: [top, bottom] }] },
-        numRatings: bottom,
+  let returnDoc;
+  returnDoc = await mongoose.model("Recipe").findOneAndUpdate(
+    { _id: id },
+    [
+      {
+        $set: {
+          avgRating: { $add: ["$avgRating", { $divide: [top, bottom] }] },
+        },
       },
-    },
-  ]);
-  if (!options || (options && options.noDoc === false)) {
-    return mongoose.model("Recipe").findById(id);
-  } else {
-    return {};
-  }
+      {
+        $set: {
+          numRatings: bottom,
+        },
+      },
+    ],
+    { new: true }
+  );
+  return returnDoc;
 };
 
-// recipeSchema.methods.removeRating = function (ratingToRemove) {
-//   mongoose.model("Recipe").updateOne({ _id: this._id }, []);
-// };
+/*
+Credit: https://stackoverflow.com/questions/22999487/update-the-average-of-a-continuous-sequence-of-numbers-in-constant-time
+perform SAFE average calculation
+  avgRating = (N * average - oldRating) / (N - 1)
+  if numRatings=0 and average = 0
+
+@param {string} id: id of the recipe
+@param {int} oldRating: rating to remove
+@param {object} session: mongoose session
+@returns null || Recipe :  if error null, otherwise updated recipe
+*/
+
+recipeSchema.statics.removeRating = async function (id, oldRating, session) {
+  if (!session) {
+    return null; //TODO throw error here
+  }
+  const decrement = { $max: [0, { $subtract: ["$numRatings", 1] }] };
+
+  const top = {
+    $subtract: [{ $multiply: ["$avgRating", "$numRatings"] }, oldRating],
+  };
+  const avgRatingCalc = { $divide: [top, { $subtract: ["$numRatings", 1] }] };
+
+  const ifStatement = (elseStatement) => {
+    let obj = {
+      $cond: {
+        if: { $lte: ["$numRatings", 1] },
+        then: 0,
+        else: elseStatement,
+      },
+    };
+
+    return obj;
+  };
+
+  const avgRatingStatement = ifStatement(avgRatingCalc);
+
+  let updatedRecipe = null;
+  try {
+    session.startTransaction();
+    updatedRecipe = await mongoose
+      .model("Recipe")
+      .aggregate([
+        { $match: { _id: mongoose.Types.ObjectId(id) } },
+        {
+          $set: {
+            avgRating: avgRatingStatement,
+            numRatings: decrement,
+          },
+        },
+      ])
+      .session(session)
+      .exec();
+
+    if (updatedRecipe.length === 1) {
+      updatedRecipe = mongoose.model("Recipe").hydrate(updatedRecipe[0]);
+    } else {
+      updatedRecipe = null;
+    }
+
+    await session.commitTransaction();
+  } catch (error) {
+    console.log(error); //TODO throw error here
+    await session.abortTransaction();
+  }
+
+  return updatedRecipe;
+};
+
+/*
+ *@param {string} id: id of the recipe
+ *@param {int} oldRating: rating to remove
+ *@param {int} newRating: rating to add
+ *@param {objecte} session: mongoose session
+ *@throws RecipeError
+ *@returns null || Recipe: null if error, otherwise updated Recipe
+ */
+recipeSchema.statics.replaceRating = async function (
+  id,
+  oldRating,
+  newRating,
+  session
+) {
+  let anyError = null;
+  if (!session) {
+    throw new RecipeError("replaceRating: no session provided");
+  }
+
+  let product = { $multiply: ["$avgRating", "$numRatings"] };
+  let difference = { $subtract: [product, oldRating] };
+  let top = { $add: [difference, newRating] };
+  let updateStatement = { $divide: [top, "$numRatings"] };
+  let updatedRecipe = null;
+  try {
+    session.startTransaction();
+    updatedRecipe = await mongoose
+      .model("Recipe")
+      .aggregate([
+        { $match: { _id: mongoose.Types.ObjectId(id) } },
+        {
+          $set: {
+            avgRating: updateStatement,
+          },
+        },
+      ])
+      .session(session);
+
+    if (updatedRecipe.length === 1) {
+      updatedRecipe = mongoose.model("Recipe").hydrate(updatedRecipe[0]);
+    } else {
+      updatedRecipe = null;
+      anyError = new RecipeError("replaceRating: something went wrong");
+    }
+    await session.commitTransaction();
+  } catch (error) {
+    console.log(error);
+    await session.abortTransaction();
+    throw error;
+  }
+  if (anyError) {
+    throw anyError;
+  }
+  return updatedRecipe;
+};
 
 const Recipe = mongoose.model("Recipe", recipeSchema);
 module.exports = {
   Recipe,
+  RecipeError,
 };
-
-//todo later: add a getter for rating
