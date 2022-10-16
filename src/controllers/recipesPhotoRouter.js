@@ -23,7 +23,7 @@ const PHOTO_SIZE_LIMIT = 10 * 1024 * 1024; //bytes
 }
 */
 recipesPhotoRouter.post("/uploadUrl", async (request, response, next) => {
-  const id = request.params.id;
+  const id = request.params.recipeId;
   const fileName = request.body.fileName;
   let mongoSession;
 
@@ -79,7 +79,7 @@ recipesPhotoRouter.post("/uploadUrl", async (request, response, next) => {
 *@returns response
 */
 recipesPhotoRouter.put("/", async (request, response, next) => {
-  const recipeId = request.params.id;
+  const recipeId = request.params.recipeId;
   let mongoSession;
   if (!request.body.photos) {
     return response.status(400).end();
@@ -144,7 +144,7 @@ recipesPhotoRouter.put("/", async (request, response, next) => {
 }
 */
 recipesPhotoRouter.delete("/", async (request, response, next) => {
-  const recipeId = request.params.id;
+  const recipeId = request.params.recipeId;
   const keys = request.body.keys;
   let mongoSession;
 

@@ -8,7 +8,7 @@ const { recipeRatingsRouter } = require("./recipeRatingsRouter");
 const mongoose = require("mongoose");
 const { isArray } = require("lodash");
 
-recipesRouter.use(`/:id(${ID_ROUTE_REGEX})/photos`, recipesPhotoRouter);
+recipesRouter.use(`/:recipeId(${ID_ROUTE_REGEX})/photos`, recipesPhotoRouter);
 recipesRouter.use("/ratings", recipeRatingsRouter);
 
 recipesRouter.get("/", async (request, response, next) => {
@@ -28,9 +28,9 @@ recipesRouter.get("/", async (request, response, next) => {
 });
 
 recipesRouter.get(
-  `/:id(${ID_ROUTE_REGEX})`,
+  `/:recipeId(${ID_ROUTE_REGEX})`,
   async (request, response, next) => {
-    const id = request.params.id;
+    const id = request.params.recipeId;
     let session;
 
     try {
@@ -133,12 +133,12 @@ recipesRouter.post("/", async (request, response, next) => {
  *or status code of 404 if the recipe with the provided id does not exist.
  */
 recipesRouter.put(
-  `/:id(${ID_ROUTE_REGEX})`,
+  `/:recipeId(${ID_ROUTE_REGEX})`,
   async (request, response, next) => {
     let session;
     try {
       session = await mongoose.startSession();
-      const recipe = await Recipe.findById(request.params.id)
+      const recipe = await Recipe.findById(request.params.recipeId)
         .session(session)
         .readConcern("majority");
 
@@ -187,12 +187,12 @@ recipesRouter.put(
  * 404: no recipe found with the provided id
  */
 recipesRouter.delete(
-  `/:id(${ID_ROUTE_REGEX})`,
+  `/:recipeId(${ID_ROUTE_REGEX})`,
   async (request, response, next) => {
     let session;
     try {
       session = await mongoose.startSession();
-      let recipe = await Recipe.findById(request.params.id)
+      let recipe = await Recipe.findById(request.params.recipeId)
         .session(session)
         .readConcern("majority");
 
@@ -203,7 +203,7 @@ recipesRouter.delete(
       }
 
       let query = await Recipe.deleteOne({
-        _id: request.params.id,
+        _id: request.params.recipeId,
         user: request.user.id,
       }).session(session);
 
