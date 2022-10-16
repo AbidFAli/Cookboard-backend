@@ -6,7 +6,7 @@ const DEFAULT_RESULT_SIZE = 50;
 const { SearchError } = require("../errors");
 
 const buildRatingFilter = (queryParams) => {
-  let ratingFilter = { range: { path: "rating" } };
+  let ratingFilter = { range: { path: "avgRating" } };
 
   let ratingMin = queryParams.ratingMin;
   let ratingMax = queryParams.ratingMax;

@@ -38,6 +38,10 @@ describe("tests for addRating", () => {
     let updatedRecipe = await Recipe.addRating(recipe.id, 4);
     expect(updatedRecipe.avgRating).toEqual(4);
     expect(updatedRecipe.numRatings).toEqual(1);
+
+    let recipeInDb = await Recipe.findById(recipe.id);
+    expect(recipeInDb.avgRating).toEqual(4);
+    expect(recipeInDb.numRatings).toEqual(1);
   });
 
   test("add a rating to a recipe with ratings", async () => {
@@ -94,7 +98,7 @@ describe("tests for removeRating", () => {
   });
 });
 
-describe.only("tests for replaceRating", () => {
+describe("tests for replaceRating", () => {
   test("replace a rating with a zero", async () => {
     let testRecipe = await Recipe.findByIdAndUpdate(recipe.id, {
       $set: { avgRating: 3, numRatings: 2 }, //3, 3
@@ -102,6 +106,8 @@ describe.only("tests for replaceRating", () => {
 
     testRecipe = await Recipe.replaceRating(recipe.id, 3, 0, session);
     expect(testRecipe.avgRating).toBeCloseTo(1.5, RATING_PRECISCION);
+    let recipeInDb = await Recipe.findById(testRecipe.id);
+    expect(recipeInDb.avgRating).toBeCloseTo(1.5, RATING_PRECISCION);
   });
 
   test("replace a rating standard case", async () => {
@@ -111,6 +117,8 @@ describe.only("tests for replaceRating", () => {
 
     testRecipe = await Recipe.replaceRating(recipe.id, 3, 2, session);
     expect(testRecipe.avgRating).toBeCloseTo(2.5, RATING_PRECISCION);
+    let recipeInDb = await Recipe.findById(testRecipe.id);
+    expect(recipeInDb.avgRating).toBeCloseTo(2.5, RATING_PRECISCION);
   });
 });
 

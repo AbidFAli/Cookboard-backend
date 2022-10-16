@@ -146,31 +146,25 @@ recipeSchema.statics.removeRating = async function (id, oldRating, session) {
 
   let updatedRecipe = null;
   try {
-    session.startTransaction();
-    updatedRecipe = await mongoose
-      .model("Recipe")
-      .aggregate([
-        { $match: { _id: mongoose.Types.ObjectId(id) } },
+    updatedRecipe = await mongoose.model("Recipe").findOneAndUpdate(
+      { _id: id },
+      [
         {
           $set: {
             avgRating: avgRatingStatement,
+          },
+        },
+        {
+          $set: {
             numRatings: decrement,
           },
         },
-      ])
-      .session(session)
-      .exec();
-
-    if (updatedRecipe.length === 1) {
-      updatedRecipe = mongoose.model("Recipe").hydrate(updatedRecipe[0]);
-    } else {
-      updatedRecipe = null;
-    }
-
-    await session.commitTransaction();
+      ],
+      { new: true }
+    );
   } catch (error) {
     console.log(error); //TODO throw error here
-    await session.abortTransaction();
+    throw error;
   }
 
   return updatedRecipe;
@@ -201,31 +195,22 @@ recipeSchema.statics.replaceRating = async function (
   let updateStatement = { $divide: [top, "$numRatings"] };
   let updatedRecipe = null;
   try {
-    session.startTransaction();
-    updatedRecipe = await mongoose
-      .model("Recipe")
-      .aggregate([
-        { $match: { _id: mongoose.Types.ObjectId(id) } },
+    updatedRecipe = await mongoose.model("Recipe").findOneAndUpdate(
+      { _id: id },
+      [
         {
           $set: {
             avgRating: updateStatement,
           },
         },
-      ])
-      .session(session);
-
-    if (updatedRecipe.length === 1) {
-      updatedRecipe = mongoose.model("Recipe").hydrate(updatedRecipe[0]);
-    } else {
-      updatedRecipe = null;
-      anyError = new RecipeError("replaceRating: something went wrong");
-    }
-    await session.commitTransaction();
+      ],
+      { new: true }
+    );
   } catch (error) {
     console.log(error);
-    await session.abortTransaction();
     throw error;
   }
+
   if (anyError) {
     throw anyError;
   }

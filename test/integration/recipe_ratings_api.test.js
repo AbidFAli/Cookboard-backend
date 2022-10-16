@@ -49,6 +49,15 @@ describe("tests for GET /api/recipes/ratings", () => {
     return one.value - two.value;
   };
 
+  test("if the user has no ratings, return an array", async () => {
+    const response = await api
+      .get(
+        `/api/recipes/ratings?userId=${initialUser.id}&recipe=${testRecipe.id}`
+      )
+      .set(authHeader(initialUserToken));
+    expect(response.body).toEqual([]);
+  });
+
   test("an existing rating can be retrieved by its userId and recipeId", async () => {
     let ratingParams = {
       value: 3.5,
@@ -207,6 +216,65 @@ describe("tests for POST /api/recipes/ratings", () => {
       });
       expect(updatedRating.rating).toBeCloseTo(1.5);
     });
+  });
+
+  describe("tests for PUT /api/recipes/ratings/", () => {
+    test("update a rating", async () => {
+      //average should change, numRatings should not change
+      let recipe = await Recipe.create({
+        name: "something",
+        user: initialUser.id,
+      });
+      let rating = await api
+        .post("/api/recipes/ratings")
+        .set(authHeader(initialUserToken))
+        .send({
+          recipe: recipe.id,
+          value: 4,
+        });
+
+      let response = await api
+        .put("/api/recipes/ratings")
+        .set(authHeader(initialUserToken))
+        .send({
+          recipe: recipe.id,
+          oldValue: 4,
+          newValue: 3,
+        });
+
+      expect(response.body.avgRating).toEqual(3);
+      expect(response.body.numRatings).toEqual(1);
+      recipe = await Recipe.findById(recipe.id);
+      expect(recipe.avgRating).toEqual(3);
+      expect(recipe.numRatings).toEqual(1);
+    });
+  });
+});
+
+describe("tests for DELETE /api/recipes/ratings", () => {
+  test("delete a rating", async () => {
+    let recipe = await Recipe.create({
+      name: "something",
+      user: initialUser.id,
+      avgRating: 4,
+      numRatings: 1,
+    });
+
+    let rating = await Rating.create({
+      value: 4,
+      userId: initialUser.id,
+      recipe: recipe.id,
+    });
+
+    await api
+      .delete(`/api/recipes/ratings/${recipe.id}`)
+      .set(authHeader(initialUserToken));
+
+    let response = await Rating.findOne({
+      recipeId: rating.recipeId,
+      userId: rating.userId,
+    });
+    expect(response).toBeNull();
   });
 });
 
