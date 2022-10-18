@@ -1,3 +1,5 @@
+const { JsonWebTokenError } = require("jsonwebtoken");
+
 const authHeader = (token) => {
   return { Authorization: `Bearer ${token}` };
 };
@@ -28,9 +30,25 @@ const createUser = async (api, userInfo) => {
     initialUserToken,
   };
 };
+
+/*
+ *@callback supressionRule:
+ *@param error: the error that will be passed to the callback
+ *@returns: true or false depending on whether to supress the error or not
+ */
+const supressErrorInTest = () => {
+  jest.spyOn(console, "error").mockImplementation(jest.fn());
+};
+
+const unsupressErrorInTest = () => {
+  jest.spyOn(console, "error").mockRestore();
+};
+
 module.exports = {
   authHeader,
   getTokenForUser,
   sleep,
   createUser,
+  supressErrorInTest,
+  unsupressErrorInTest,
 };

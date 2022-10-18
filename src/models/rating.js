@@ -1,6 +1,16 @@
 const { mongoose, Schema } = require("mongoose");
 const autopopulatePlugin = require("mongoose-autopopulate");
 
+const autoIndexEnabled = () => {
+  if (
+    process.env.NODE_ENV === "test" ||
+    process.env.NODE_ENV === "development"
+  ) {
+    return true;
+  }
+  return false;
+};
+
 const ratingSchema = new mongoose.Schema(
   {
     value: Number,
@@ -12,13 +22,13 @@ const ratingSchema = new mongoose.Schema(
     },
   },
   {
-    autoIndex: false,
+    autoIndex: autoIndexEnabled(),
     selectPopulatedPaths: false,
   }
 );
 
 ratingSchema.plugin(autopopulatePlugin);
-ratingSchema.index({ userId: 1, recipeId: -1 });
+ratingSchema.index({ userId: 1, recipeId: -1 }, { unique: true });
 
 ratingSchema.set("toJSON", {
   transform: function (doc, returnedObject, options) {

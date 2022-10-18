@@ -55,11 +55,6 @@ const recipeSchema = new mongoose.Schema(
   },
   {
     autoIndex: false,
-    writeConcern: {
-      w: "majority",
-      j: false,
-      wtimeout: 2000,
-    },
   }
 );
 
@@ -83,7 +78,7 @@ recipeSchema.index({ avgRating: -1 });
 //and returns a copy of the recipe with the updated rating.
 //@param {string} id: id of the recipe
 //@param {int} newRating: rating to be added
-recipeSchema.statics.addRating = async function (id, newRating, options) {
+recipeSchema.statics.addRating = async function (id, newRating, session) {
   //subtract = 1st arg - 2nd arg
   let top = { $subtract: [newRating, "$avgRating"] };
   let bottom = { $add: [1, "$numRatings"] };
@@ -102,7 +97,7 @@ recipeSchema.statics.addRating = async function (id, newRating, options) {
         },
       },
     ],
-    { new: true }
+    { new: true, session }
   );
   return returnDoc;
 };
@@ -121,7 +116,7 @@ perform SAFE average calculation
 
 recipeSchema.statics.removeRating = async function (id, oldRating, session) {
   if (!session) {
-    return null; //TODO throw error here
+    throw new RecipeError("removeRating: no session provided");
   }
   const decrement = { $max: [0, { $subtract: ["$numRatings", 1] }] };
 
@@ -160,7 +155,7 @@ recipeSchema.statics.removeRating = async function (id, oldRating, session) {
           },
         },
       ],
-      { new: true }
+      { new: true, session }
     );
   } catch (error) {
     console.log(error); //TODO throw error here
@@ -174,7 +169,7 @@ recipeSchema.statics.removeRating = async function (id, oldRating, session) {
  *@param {string} id: id of the recipe
  *@param {int} oldRating: rating to remove
  *@param {int} newRating: rating to add
- *@param {objecte} session: mongoose session
+ *@param {object} session: mongoose session
  *@throws RecipeError
  *@returns null || Recipe: null if error, otherwise updated Recipe
  */
@@ -204,7 +199,7 @@ recipeSchema.statics.replaceRating = async function (
           },
         },
       ],
-      { new: true }
+      { new: true, session }
     );
   } catch (error) {
     console.log(error);

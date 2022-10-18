@@ -8,7 +8,10 @@ const {
   authHeader,
   getTokenForUser,
   createUser,
+  supressErrorInTest,
+  unsupressErrorInTest,
 } = require("./test_utils/testHelper.js");
+
 const api = supertest(app);
 const recipeFixtures = require("./fixtures/recipeFixtures");
 const mongoHelper = require("../../src/utils/mongoHelper");
@@ -44,11 +47,11 @@ const createRating = async (value) => {
   });
 };
 
-describe("tests for GET /api/recipes/ratings", () => {
-  const ratingComparator = (one, two) => {
-    return one.value - two.value;
-  };
+const ratingComparator = (one, two) => {
+  return one.value - two.value;
+};
 
+describe("tests for GET /api/recipes/ratings", () => {
   test("if the user has no ratings, return an array", async () => {
     const response = await api
       .get(
@@ -144,11 +147,19 @@ describe("tests for POST /api/recipes/ratings", () => {
       userId: initialUser.id,
       recipe: testRecipe.id,
     };
-    await api
+    let response = await api
       .post("/api/recipes/ratings")
       .set(authHeader(initialUserToken))
-      .send(rating)
-      .expect(201);
+      .send(rating);
+
+    expect(response.status).toEqual(201);
+    expect(response.body.avgRating).toEqual(rating.value);
+    expect(response.body.numRatings).toEqual(1);
+    expect(response.body.rating).toMatchObject({
+      ...rating,
+      id: expect.anything(),
+      recipe: { id: testRecipe.id },
+    });
   });
 
   test("a rating cannot be created without providing a recipe", async () => {
@@ -160,6 +171,29 @@ describe("tests for POST /api/recipes/ratings", () => {
       .set(authHeader(initialUserToken))
       .send(rating)
       .expect(400);
+  });
+
+  test("user cant create two ratings for the same recipe", async () => {
+    supressErrorInTest();
+    let ratings = [1, 2].map((value) => {
+      return {
+        value,
+        userId: initialUser.id,
+        recipe: testRecipe.id,
+      };
+    });
+
+    //returns a promise
+    let makeRequest = (rating) => {
+      return api
+        .post("/api/recipes/ratings")
+        .set(authHeader(initialUserToken))
+        .send(rating);
+    };
+
+    await makeRequest(ratings[0]).expect(201);
+    await makeRequest(ratings[1]).expect(400);
+    unsupressErrorInTest();
   });
 
   describe("creating a rating updates the avgRating for the recipe", () => {
@@ -196,16 +230,33 @@ describe("tests for POST /api/recipes/ratings", () => {
     });
 
     test("with multiple ratings, should be the average", async () => {
-      let ratings = [1, 2].map((value) => ({
-        userId: initialUser.id,
+      //({ initialUser, initialUserToken } = await createUser(api, initialUserInfo));
+
+      let user2 = {
+        username: "user2",
+        password: "password",
+        email: "something@something.com",
+      };
+      let user2Token = null;
+      ({ initialUser: user2, initialUserToken: user2Token } = await createUser(
+        api,
+        user2
+      ));
+      let users = [
+        { user: initialUser, token: initialUserToken },
+        { user: user2, token: user2Token },
+      ];
+
+      let ratings = [1, 2].map((value, i) => ({
+        userId: users[i].id,
         recipe: testRecipe.id,
         value: value,
       }));
 
-      let createRatingsPromises = ratings.map((r) => {
+      let createRatingsPromises = ratings.map((r, i) => {
         return api
           .post("/api/recipes/ratings")
-          .set(authHeader(initialUserToken))
+          .set(authHeader(users[i].token))
           .send(r);
       });
 
@@ -217,37 +268,36 @@ describe("tests for POST /api/recipes/ratings", () => {
       expect(updatedRating.rating).toBeCloseTo(1.5);
     });
   });
+});
 
-  describe("tests for PUT /api/recipes/ratings/", () => {
-    test("update a rating", async () => {
-      //average should change, numRatings should not change
-      let recipe = await Recipe.create({
-        name: "something",
-        user: initialUser.id,
-      });
-      let rating = await api
-        .post("/api/recipes/ratings")
-        .set(authHeader(initialUserToken))
-        .send({
-          recipe: recipe.id,
-          value: 4,
-        });
-
-      let response = await api
-        .put("/api/recipes/ratings")
-        .set(authHeader(initialUserToken))
-        .send({
-          recipe: recipe.id,
-          oldValue: 4,
-          newValue: 3,
-        });
-
-      expect(response.body.avgRating).toEqual(3);
-      expect(response.body.numRatings).toEqual(1);
-      recipe = await Recipe.findById(recipe.id);
-      expect(recipe.avgRating).toEqual(3);
-      expect(recipe.numRatings).toEqual(1);
+describe("tests for PUT /api/recipes/ratings/", () => {
+  test("update a rating", async () => {
+    //average should change, numRatings should not change
+    let recipe = await Recipe.create({
+      name: "something",
+      user: initialUser.id,
     });
+    let rating = await api
+      .post("/api/recipes/ratings")
+      .set(authHeader(initialUserToken))
+      .send({
+        recipe: recipe.id,
+        value: 4,
+      });
+
+    let response = await api
+      .put("/api/recipes/ratings")
+      .set(authHeader(initialUserToken))
+      .send({
+        recipe: recipe.id,
+        value: 3,
+      });
+
+    expect(response.body.avgRating).toEqual(3);
+    expect(response.body.numRatings).toEqual(1);
+    recipe = await Recipe.findById(recipe.id);
+    expect(recipe.avgRating).toEqual(3);
+    expect(recipe.numRatings).toEqual(1);
   });
 });
 

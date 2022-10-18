@@ -4,6 +4,7 @@ const { Recipe } = require("../models/recipe");
 const { isArray, isNil } = require("lodash");
 const { default: mongoose } = require("mongoose");
 const { ID_ROUTE_REGEX } = require("../utils/controllers/routerHelper");
+const { MongoError } = require("mongodb");
 
 //3 options: getByUserID, getByRecipeId, getOne(userId, recipeId)
 /*
@@ -43,40 +44,53 @@ recipeRatingsRouter.get("/", async (request, response, next) => {
   }
 */
 recipeRatingsRouter.post("/", async (request, response, next) => {
+  const body = request.body;
+  let user = request.user;
+  if (!body.recipe || !body.value) {
+    return response.status(400).send();
+  }
+  const session = await mongoose.startSession();
+  let rating = null;
+  let newRecipe = null;
   try {
-    const body = request.body;
-    let user = request.user;
-    if (!body.recipe || !body.value) {
-      return response.status(400).send();
-    }
-
-    const rating = new Rating({
-      value: body.value,
-      userId: user.id,
-      recipe: body.recipe,
-    });
-    const createdRating = await rating.save();
-    let newRecipe = await Recipe.addRating(body.recipe, rating.value);
-
-    response.status(201).json({
-      rating: createdRating,
-      average: newRecipe.avgRating,
-      numRatings: newRecipe.numRatings,
+    await session.withTransaction(async () => {
+      rating = await Rating.create(
+        [
+          {
+            value: body.value,
+            userId: user.id,
+            recipe: body.recipe,
+          },
+        ],
+        { session }
+      );
+      rating = rating[0];
+      newRecipe = await Recipe.addRating(body.recipe, rating.value, session);
     });
   } catch (error) {
     next(error);
+  } finally {
+    await session.endSession();
+  }
+
+  if (rating === null || newRecipe === null) {
+    response.status(400).send();
+  } else {
+    response.status(201).json({
+      rating: rating,
+      avgRating: newRecipe.avgRating,
+      numRatings: newRecipe.numRatings,
+    });
   }
 });
 
-//TODO: change back to node/:id/node2/:id2 format instead of using query params
 //read this: https://github.com/RestCheatSheet/api-cheat-sheet#api-design-cheat-sheet
 /*
   description: update a single existing rating
   example: PUT /api/recipes/ratings/
   request body: {
     recipe: string, mandatory. The id of the recipe to rate
-    oldValue: number, mandatory. Old value of rating
-    newValue: number, mandatory. New value of rating
+    value: number, mandatory. New value of rating
   }
 
   response body: {
@@ -88,23 +102,28 @@ recipeRatingsRouter.put("/", async (request, response, next) => {
   const body = request.body;
   const user = request.user;
   try {
-    if (!body.recipe || isNil(body.oldValue) || isNil(body.newValue)) {
+    if (!body.recipe || isNil(body.value)) {
       return response.status(400).send();
     }
 
-    await Rating.findOneAndUpdate(
-      { userId: user.id, recipe: body.recipe },
-      {
-        value: body.newValue,
-      }
-    );
     let session = await mongoose.startSession();
-    let updatedRecipe = await Recipe.replaceRating(
-      body.recipe,
-      body.oldValue,
-      body.newValue,
-      session
-    );
+    let updatedRecipe;
+    await session.withTransaction(async () => {
+      let oldRating = await Rating.findOneAndUpdate(
+        { userId: user.id, recipe: body.recipe },
+        {
+          value: body.value,
+        },
+        { session }
+      );
+
+      updatedRecipe = await Recipe.replaceRating(
+        body.recipe,
+        oldRating.value,
+        body.value,
+        session
+      );
+    });
     await session.endSession();
 
     response.status(201).json({
@@ -135,12 +154,15 @@ recipeRatingsRouter.delete(
     let recipeInfo = null;
     try {
       session = await mongoose.startSession();
-      let rating = await Rating.findOne({
-        userId: request.user.id,
-        recipe: recipeId,
+
+      await session.withTransaction(async () => {
+        let rating = await Rating.findOne({
+          userId: request.user.id,
+          recipe: recipeId,
+        });
+        await Rating.deleteOne({ userId: request.user.id, recipe: recipeId });
+        recipeInfo = await Recipe.removeRating(recipeId, rating.value, session);
       });
-      await Rating.deleteOne({ userId: request.user.id, recipe: recipeId });
-      recipeInfo = await Recipe.removeRating(recipeId, rating.value, session);
     } catch (error) {
       next(error);
     } finally {
