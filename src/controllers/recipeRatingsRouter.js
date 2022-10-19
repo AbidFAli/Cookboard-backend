@@ -21,10 +21,10 @@ recipeRatingsRouter.get("/", async (request, response, next) => {
     let userId = request.query.userId;
     let filter = {};
     if (recipeId && userId) {
-      filter.recipe = recipeId;
+      filter.recipeId = recipeId;
       filter.userId = userId;
     } else if (recipeId) {
-      filter.recipe = recipeId;
+      filter.recipeId = recipeId;
     } else if (userId) {
       filter.userId = userId;
     }
@@ -59,7 +59,7 @@ recipeRatingsRouter.post("/", async (request, response, next) => {
           {
             value: body.value,
             userId: user.id,
-            recipe: body.recipe,
+            recipeId: body.recipe,
           },
         ],
         { session }

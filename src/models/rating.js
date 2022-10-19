@@ -15,19 +15,18 @@ const ratingSchema = new mongoose.Schema(
   {
     value: Number,
     userId: Schema.Types.ObjectId,
-    recipe: {
+    recipeId: {
       type: Schema.Types.ObjectId,
       ref: "Recipe",
-      autopopulate: { select: "name" },
     },
+    recipeName: String,
   },
   {
     autoIndex: autoIndexEnabled(),
-    selectPopulatedPaths: false,
   }
 );
 
-ratingSchema.plugin(autopopulatePlugin);
+//ratingSchema.plugin(autopopulatePlugin);
 ratingSchema.index({ userId: 1, recipeId: -1 }, { unique: true });
 
 ratingSchema.set("toJSON", {
@@ -40,9 +39,9 @@ ratingSchema.set("toJSON", {
   virtuals: true,
 });
 
-ratingSchema.post("save", async function (doc, next) {
-  await doc.populate("recipe", { _id: 1, name: 1 });
-});
+// ratingSchema.post("save", async function (doc, next) {
+//   await doc.populate("recipe", { _id: 1, name: 1 });
+// });
 
 const Rating = mongoose.model("Rating", ratingSchema);
 

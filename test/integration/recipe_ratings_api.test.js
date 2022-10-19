@@ -10,12 +10,14 @@ const {
   createUser,
   supressErrorInTest,
   unsupressErrorInTest,
+  createRandomRecipe,
 } = require("./test_utils/testHelper.js");
 
 const api = supertest(app);
 const recipeFixtures = require("./fixtures/recipeFixtures");
 const mongoHelper = require("../../src/utils/mongoHelper");
 const { waffles } = require("./fixtures/recipeFixtures");
+const { ObjectId } = require("mongodb");
 
 let initialUser;
 let initialUserToken;
@@ -31,7 +33,10 @@ beforeEach(async () => {
     password: "password",
     email: "test@test.com",
   };
-  ({ initialUser, initialUserToken } = await createUser(api, initialUserInfo));
+  ({ user: initialUser, token: initialUserToken } = await createUser(
+    api,
+    initialUserInfo
+  ));
   const params = waffles();
   params.rating = 0;
   testRecipe = new Recipe({ ...params });
@@ -43,7 +48,7 @@ const createRating = async (value) => {
   return await Rating.create({
     value,
     userId: initialUser.id,
-    recipe: testRecipe.id,
+    recipeId: testRecipe.id,
   });
 };
 
@@ -65,7 +70,7 @@ describe("tests for GET /api/recipes/ratings", () => {
     let ratingParams = {
       value: 3.5,
       userId: initialUser.id,
-      recipe: testRecipe.id,
+      recipeId: testRecipe.id,
     };
     let initialRating = await Rating.create(ratingParams);
 
@@ -81,17 +86,24 @@ describe("tests for GET /api/recipes/ratings", () => {
     expect(retrievedRatings[0]).toMatchObject({
       value: ratingParams.value,
       userId: ratingParams.userId,
-      recipe: { id: ratingParams.recipe },
+      recipeId: ratingParams.recipeId,
       id: initialRating.id,
     });
   });
 
   test("all of a users ratings can be found", async () => {
+    let createPromises = new Array(5).fill(0).map((_, i) => {
+      return createRandomRecipe();
+    });
+
+    let recipes = await Promise.all(createPromises);
+
     let fiveRatings = new Array(5).fill(0).map((_, i) => ({
       userId: initialUser.id,
-      recipe: testRecipe.id,
+      recipeId: recipes[i].id,
       value: i,
     }));
+
     await Rating.create(fiveRatings);
     const response = await api.get(
       `/api/recipes/ratings?userId=${initialUser.id}`
@@ -101,17 +113,21 @@ describe("tests for GET /api/recipes/ratings", () => {
       return one.value - two.value;
     };
     retreivedRatings.sort(ratingComparator);
-    fiveRatings = fiveRatings.map((rating) => {
-      rating.recipe = { id: rating.recipe };
-      return rating;
-    });
     expect(retreivedRatings).toMatchObject(fiveRatings);
   });
 
   test("all of a recipe's ratings can be found", async () => {
+    let createUsersPromises = [];
+    for (let i = 1; i <= 5; i++) {
+      let userPromise = createUser(api);
+      createUsersPromises.push(userPromise);
+    }
+
+    let userInfo = await Promise.all(createUsersPromises);
+
     let fiveRatings = new Array(5).fill(0).map((_, i) => ({
-      userId: initialUser.id,
-      recipe: testRecipe.id,
+      userId: userInfo[i].user.id,
+      recipeId: testRecipe.id,
       value: i,
     }));
     await Rating.create(fiveRatings);
@@ -121,22 +137,7 @@ describe("tests for GET /api/recipes/ratings", () => {
     let retreivedRatings = response.body;
 
     retreivedRatings.sort(ratingComparator);
-    fiveRatings = fiveRatings.map((rating) => {
-      rating.recipe = { id: rating.recipe };
-      return rating;
-    });
     expect(retreivedRatings).toMatchObject(fiveRatings);
-  });
-
-  test("a rating contains the name of the recipe which it was left for", async () => {
-    await createRating(3.5);
-    let response = await api
-      .get(
-        `/api/recipes/ratings?userId=${initialUser.id}&recipe=${testRecipe.id}`
-      )
-      .set(authHeader(initialUserToken));
-    let rating = response.body[0];
-    expect(rating.recipe.name).toEqual(testRecipe.name);
   });
 });
 
@@ -156,9 +157,10 @@ describe("tests for POST /api/recipes/ratings", () => {
     expect(response.body.avgRating).toEqual(rating.value);
     expect(response.body.numRatings).toEqual(1);
     expect(response.body.rating).toMatchObject({
-      ...rating,
+      value: rating.value,
+      userId: rating.userId,
       id: expect.anything(),
-      recipe: { id: testRecipe.id },
+      recipeId: testRecipe.id,
     });
   });
 
@@ -238,17 +240,14 @@ describe("tests for POST /api/recipes/ratings", () => {
         email: "something@something.com",
       };
       let user2Token = null;
-      ({ initialUser: user2, initialUserToken: user2Token } = await createUser(
-        api,
-        user2
-      ));
+      ({ user: user2, token: user2Token } = await createUser(api, user2));
       let users = [
         { user: initialUser, token: initialUserToken },
         { user: user2, token: user2Token },
       ];
 
       let ratings = [1, 2].map((value, i) => ({
-        userId: users[i].id,
+        userId: users[i].user.id,
         recipe: testRecipe.id,
         value: value,
       }));

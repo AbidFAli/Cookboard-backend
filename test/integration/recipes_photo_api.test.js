@@ -31,7 +31,7 @@ beforeEach(async () => {
     password: "password",
     email: "test@test.com",
   };
-  ({ initialUser, initialUserToken } = await testHelper.createUser(
+  ({ user: initialUser, token: initialUserToken } = await testHelper.createUser(
     api,
     initialUserInfo
   ));

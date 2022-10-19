@@ -26,7 +26,10 @@ beforeEach(async () => {
     password: "password",
     email: "test@test.com",
   };
-  ({ initialUser, initialUserToken } = await createUser(api, initialUserInfo));
+  ({ user: initialUser, token: initialUserToken } = await createUser(
+    api,
+    initialUserInfo
+  ));
 });
 
 afterAll(async () => {
