@@ -1,8 +1,8 @@
 const recipesRouter = require("express").Router();
 const { recipesPhotoRouter } = require("./recipesPhotoRouter");
 const { Recipe } = require("../models/recipe");
-const { ID_ROUTE_REGEX } = require("../utils/controllers/routerHelper");
-const helper = require("../utils/controllers/recipesRouterHelper");
+const { ID_ROUTE_REGEX } = require("./util/routerHelper");
+const helper = require("./util/recipesRouterHelper");
 const mongoHelper = require("../utils/mongoHelper");
 const { recipeRatingsRouter } = require("./recipeRatingsRouter");
 const mongoose = require("mongoose");

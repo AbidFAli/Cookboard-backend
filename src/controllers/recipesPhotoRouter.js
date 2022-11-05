@@ -1,9 +1,9 @@
 const recipesPhotoRouter = require("express").Router({ mergeParams: true });
-const { Recipe } = require("../models/recipe");
+const { Recipe } = require("models/recipe");
 
 const { createPresignedPost } = require("@aws-sdk/s3-presigned-post");
 
-const photoHelper = require("../utils/controllers/recipesPhotoRouterHelper");
+const photoHelper = require("./utils/recipesPhotoRouterHelper");
 const mongoose = require("mongoose");
 
 const PRESIGNED_POST_EXPIRATION_TIME = 600; //seconds

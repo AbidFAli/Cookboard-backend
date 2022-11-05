@@ -3,7 +3,7 @@ const { Rating } = require("../models/rating");
 const { Recipe } = require("../models/recipe");
 const { isArray, isNil } = require("lodash");
 const { default: mongoose } = require("mongoose");
-const { ID_ROUTE_REGEX } = require("../utils/controllers/routerHelper");
+const { ID_ROUTE_REGEX } = require("./util/routerHelper");
 const { MongoError } = require("mongodb");
 
 //3 options: getByUserID, getByRecipeId, getOne(userId, recipeId)

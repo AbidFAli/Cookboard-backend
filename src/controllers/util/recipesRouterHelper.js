@@ -3,7 +3,7 @@ const RATING_MAX_VALUE = 5;
 const RATING_PIVOT = 2.5;
 const DEFAULT_RESULT_SIZE = 50;
 
-const { SearchError } = require("../errors");
+const { SearchError } = require("../../utils/errors");
 
 const buildRatingFilter = (queryParams) => {
   let ratingFilter = { range: { path: "avgRating" } };
