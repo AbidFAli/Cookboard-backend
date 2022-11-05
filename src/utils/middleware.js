@@ -19,7 +19,7 @@ const errorHandler = function (error, request, response, next) {
       .status(403)
       .json({ name: error.name, error: error.message });
   }
-  console.log(error);
+  console.error(error);
   next(error);
 };
 

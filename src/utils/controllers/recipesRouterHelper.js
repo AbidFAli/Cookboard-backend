@@ -2,12 +2,11 @@ const RECIPE_SEARCH_INDEX = "name_ingredient_rating";
 const RATING_MAX_VALUE = 5;
 const RATING_PIVOT = 2.5;
 const DEFAULT_RESULT_SIZE = 50;
-const ID_ROUTE_REGEX = "[a-f\\d]{24}";
 
 const { SearchError } = require("../errors");
 
 const buildRatingFilter = (queryParams) => {
-  let ratingFilter = { range: { path: "rating" } };
+  let ratingFilter = { range: { path: "avgRating" } };
 
   let ratingMin = queryParams.ratingMin;
   let ratingMax = queryParams.ratingMax;
@@ -125,5 +124,4 @@ module.exports = {
   completeSearchQuery,
   buildSearchOptions,
   RATING_MAX_VALUE,
-  ID_ROUTE_REGEX,
 };
