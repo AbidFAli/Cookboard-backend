@@ -1,7 +1,7 @@
 const usersRouter = require("express").Router();
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-const mongoHelper = require("../utils/mongoHelper");
+const mongoose = require("mongoose");
 const MIN_PASS_LENGTH = 3;
 const PASSWORD_ERROR_MESSAGE = `PasswordError: password was less than ${MIN_PASS_LENGTH} characters`;
 
@@ -10,8 +10,9 @@ const NUM_SALTS = 10;
 const recipeInfoToPopulate = { _id: 1, name: 1 };
 
 usersRouter.get("/", async (request, response, next) => {
+  let session;
   try {
-    const session = await mongoHelper.getSession();
+    session = await mongoose.startSession();
     const users = await User.find({})
       .readConcern("majority")
       .session(session)
@@ -19,13 +20,16 @@ usersRouter.get("/", async (request, response, next) => {
     response.json(users);
   } catch (error) {
     next(error);
+  } finally {
+    session.endSession();
   }
 });
 
 usersRouter.get("/:id", async (request, response, next) => {
   let user = null;
-  const session = await mongoHelper.getSession();
+  let session;
   try {
+    session = await mongoose.startSession();
     user = await User.findById(request.params.id)
       .readConcern("majority")
       .session(session)
@@ -37,6 +41,8 @@ usersRouter.get("/:id", async (request, response, next) => {
     }
   } catch (error) {
     next(error);
+  } finally {
+    session.endSession();
   }
 });
 
@@ -49,8 +55,9 @@ body = {
 */
 usersRouter.post("/", async (request, response, next) => {
   const body = request.body;
-  const session = await mongoHelper.getSession();
+  let session;
   try {
+    session = await mongoose.startSession();
     if (body.password && body.password.length < 3) {
       throw new Error(PASSWORD_ERROR_MESSAGE);
     }
@@ -65,6 +72,8 @@ usersRouter.post("/", async (request, response, next) => {
     response.json(savedUser);
   } catch (error) {
     next(error);
+  } finally {
+    session.endSession();
   }
 });
 

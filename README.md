@@ -24,6 +24,10 @@ WSL:
 `./scripts/dev/startServerWSL.sh`  
 
 
+# Dev Setup
+
+1. Create the .env file(NOT ON VERSION CONTROL)
+
 # Credits
 
 Some ideas and code modification from FullStackOpen(https://fullstackopen.com/en/) Chapters 2-5.

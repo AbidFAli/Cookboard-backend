@@ -1,22 +1,55 @@
 const recipesRouter = require("express").Router();
 const { recipesPhotoRouter } = require("./recipesPhotoRouter");
-const Recipe = require("../models/recipe");
+const { Recipe } = require("../models/recipe");
+const { ID_ROUTE_REGEX } = require("../utils/controllers/routerHelper");
 const helper = require("../utils/controllers/recipesRouterHelper");
 const mongoHelper = require("../utils/mongoHelper");
+const { recipeRatingsRouter } = require("./recipeRatingsRouter");
+const mongoose = require("mongoose");
+const { isArray } = require("lodash");
 
-recipesRouter.use(`/:id(${helper.ID_ROUTE_REGEX})/photos`, recipesPhotoRouter);
+recipesRouter.use(`/:recipeId(${ID_ROUTE_REGEX})/photos`, recipesPhotoRouter);
+recipesRouter.use("/ratings", recipeRatingsRouter);
 
 recipesRouter.get("/", async (request, response, next) => {
+  let session;
   try {
-    const session = await mongoHelper.getSession();
+    session = await mongoose.startSession();
     const recipes = await Recipe.find({})
       .readConcern("majority")
       .session(session);
+
     response.json(recipes);
   } catch (error) {
     next(error);
+  } finally {
+    session.endSession();
   }
 });
+
+recipesRouter.get(
+  `/:recipeId(${ID_ROUTE_REGEX})`,
+  async (request, response, next) => {
+    const id = request.params.recipeId;
+    let session;
+
+    try {
+      session = await mongoose.startSession();
+      const recipe = await Recipe.findById(id)
+        .readConcern("majority")
+        .session(session);
+      if (recipe) {
+        response.json(recipe);
+      } else {
+        response.status(404).end();
+      }
+    } catch (error) {
+      next(error);
+    } finally {
+      session.endSession();
+    }
+  }
+);
 
 /*
  * Query parameters: {
@@ -29,31 +62,11 @@ recipesRouter.get("/", async (request, response, next) => {
  *   Ignored if params.count is provided
  *}
  */
-recipesRouter.get(
-  `/:id(${helper.ID_ROUTE_REGEX})`,
-  async (request, response, next) => {
-    const id = request.params.id;
-    const session = await mongoHelper.getSession();
-
-    try {
-      const recipe = await Recipe.findById(id)
-        .readConcern("majority")
-        .session(session);
-      if (recipe) {
-        response.json(recipe);
-      } else {
-        response.status(404).end();
-      }
-    } catch (error) {
-      next(error);
-    }
-  }
-);
-
 //sort priority: name, rating,
 recipesRouter.get("/search", async (request, response, next) => {
+  let session;
   try {
-    const session = await mongoHelper.getSession();
+    session = await mongoose.startSession();
     let query = Recipe.aggregate()
       .search(helper.buildSearchOptions(request.query))
       .session(session);
@@ -75,6 +88,8 @@ recipesRouter.get("/search", async (request, response, next) => {
     }
   } catch (error) {
     next(error);
+  } finally {
+    session.endSession();
   }
 });
 
@@ -82,6 +97,7 @@ recipesRouter.get("/search", async (request, response, next) => {
     Example Request Header: {'Authorization': 'Bearer yourTokenHere'}
 */
 recipesRouter.post("/", async (request, response, next) => {
+  let session;
   const body = request.body;
   let user = request.user;
 
@@ -98,7 +114,7 @@ recipesRouter.post("/", async (request, response, next) => {
   });
 
   try {
-    const session = await mongoHelper.getSession();
+    session = await mongoose.startSession();
     const savedRecipe = await recipe.save({ session });
     if (user) {
       user.recipes = user.recipes.concat(savedRecipe._id);
@@ -107,6 +123,8 @@ recipesRouter.post("/", async (request, response, next) => {
     response.status(201).json(recipe);
   } catch (error) {
     next(error);
+  } finally {
+    session.endSession();
   }
 });
 
@@ -115,11 +133,12 @@ recipesRouter.post("/", async (request, response, next) => {
  *or status code of 404 if the recipe with the provided id does not exist.
  */
 recipesRouter.put(
-  `/:id(${helper.ID_ROUTE_REGEX})`,
+  `/:recipeId(${ID_ROUTE_REGEX})`,
   async (request, response, next) => {
+    let session;
     try {
-      const session = await mongoHelper.getSession();
-      const recipe = await Recipe.findById(request.params.id)
+      session = await mongoose.startSession();
+      const recipe = await Recipe.findById(request.params.recipeId)
         .session(session)
         .readConcern("majority");
 
@@ -127,7 +146,27 @@ recipesRouter.put(
         return response.status(404).end();
       } else if (recipe.user.toString() === request.user.id) {
         let newRecipe = request.body;
-        recipe.set(newRecipe);
+
+        const properties = [
+          "name",
+          "description",
+          "instructions",
+          "ingredients",
+          "avgRating",
+          "numRatings",
+          "timeToMake",
+          "servingInfo",
+          "photos",
+          "calories",
+          "user",
+        ];
+
+        for (let prop of properties) {
+          if (newRecipe[prop] !== null && newRecipe[prop] !== undefined) {
+            recipe[prop] = newRecipe[prop];
+          }
+        }
+
         let updatedRecipe = await recipe.save();
         response.send(updatedRecipe);
       } else if (recipe.user.toString() !== request.user.id) {
@@ -135,6 +174,8 @@ recipesRouter.put(
       }
     } catch (error) {
       next(error);
+    } finally {
+      session.endSession();
     }
   }
 );
@@ -146,11 +187,12 @@ recipesRouter.put(
  * 404: no recipe found with the provided id
  */
 recipesRouter.delete(
-  `/:id(${helper.ID_ROUTE_REGEX})`,
+  `/:recipeId(${ID_ROUTE_REGEX})`,
   async (request, response, next) => {
+    let session;
     try {
-      const session = await mongoHelper.getSession();
-      let recipe = await Recipe.findById(request.params.id)
+      session = await mongoose.startSession();
+      let recipe = await Recipe.findById(request.params.recipeId)
         .session(session)
         .readConcern("majority");
 
@@ -161,17 +203,19 @@ recipesRouter.delete(
       }
 
       let query = await Recipe.deleteOne({
-        _id: request.params.id,
+        _id: request.params.recipeId,
         user: request.user.id,
       }).session(session);
 
-      if (query.ok && query.n === 1) {
+      if (query.acknowledged && query.deletedCount === 1) {
         response.status(204).end();
       } else {
         response.status(500).end();
       }
     } catch (error) {
       next(error);
+    } finally {
+      session.endSession();
     }
   }
 );

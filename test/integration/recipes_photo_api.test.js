@@ -2,7 +2,7 @@ const app = require("../../src/app");
 const supertest = require("supertest");
 const api = supertest(app);
 const mongoose = require("mongoose");
-const Recipe = require("../../src/models/recipe");
+const { Recipe } = require("../../src/models/recipe");
 const recipeFixtures = require("./fixtures/recipeFixtures");
 const User = require("../../src/models/user");
 
@@ -19,8 +19,11 @@ let initialUser;
 let initialUserToken;
 let session;
 
+beforeAll(async () => {
+  session = await mongoose.startSession();
+});
+
 beforeEach(async () => {
-  session = await mongoHelper.getSession();
   await Recipe.deleteMany({}).session(session);
   await User.deleteMany({}).session(session);
   let initialUserInfo = {
@@ -28,12 +31,16 @@ beforeEach(async () => {
     password: "password",
     email: "test@test.com",
   };
-  ({ initialUser, initialUserToken } = await testHelper.createUser(
+  ({ user: initialUser, token: initialUserToken } = await testHelper.createUser(
     api,
     initialUserInfo
   ));
   let oldPhotos = await photoTestHelper.getTestPhotos();
   await photoTestHelper.deleteTestPhotos(oldPhotos);
+});
+
+afterAll(async () => {
+  session.endSession();
 });
 
 describe("tests for POST /uploadUrl", () => {

@@ -1,7 +1,7 @@
 const supertest = require("supertest");
 const mongoose = require("mongoose");
 const app = require("../../src/app");
-const Recipe = require("../../src/models/recipe");
+const { Recipe } = require("../../src/models/recipe");
 const User = require("../../src/models/user");
 const jwt = require("jsonwebtoken");
 const mongoHelper = require("../../src/utils/mongoHelper");
@@ -16,10 +16,16 @@ const {
 const api = supertest(app);
 
 let session;
+
+beforeAll(async () => {
+  session = await mongoose.startSession();
+});
 beforeEach(async () => {
-  session = await mongoHelper.getSession();
   await Recipe.deleteMany({}).session(session);
   await User.deleteMany({}).session(session);
+});
+afterAll(async () => {
+  session.endSession();
 });
 
 describe("tests for login", () => {
