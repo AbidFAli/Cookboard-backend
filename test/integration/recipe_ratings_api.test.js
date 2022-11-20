@@ -17,7 +17,6 @@ const api = supertest(app);
 const recipeFixtures = require("./fixtures/recipeFixtures");
 const mongoHelper = require("../../src/utils/mongoHelper");
 const { waffles } = require("./fixtures/recipeFixtures");
-const { ObjectId } = require("mongodb");
 
 let initialUser;
 let initialUserToken;

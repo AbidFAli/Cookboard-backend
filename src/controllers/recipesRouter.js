@@ -1,5 +1,6 @@
 const recipesRouter = require("express").Router();
 const { recipesPhotoRouter } = require("./recipesPhotoRouter");
+const { commentsRouter } = require("./recipeCommentsRouter");
 const { Recipe } = require("../models/recipe");
 const { ID_ROUTE_REGEX } = require("../utils/controllers/routerHelper");
 const helper = require("../utils/controllers/recipesRouterHelper");
@@ -9,6 +10,7 @@ const mongoose = require("mongoose");
 const { isArray } = require("lodash");
 
 recipesRouter.use(`/:recipeId(${ID_ROUTE_REGEX})/photos`, recipesPhotoRouter);
+recipesRouter.use(`/:recipeId(${ID_ROUTE_REGEX})/comments`, commentsRouter);
 recipesRouter.use("/ratings", recipeRatingsRouter);
 
 recipesRouter.get("/", async (request, response, next) => {

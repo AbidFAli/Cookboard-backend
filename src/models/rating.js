@@ -1,15 +1,6 @@
 const { mongoose, Schema } = require("mongoose");
 const autopopulatePlugin = require("mongoose-autopopulate");
-
-const autoIndexEnabled = () => {
-  if (
-    process.env.NODE_ENV === "test" ||
-    process.env.NODE_ENV === "development"
-  ) {
-    return true;
-  }
-  return false;
-};
+const { autoIndexEnabled } = require("../utils/modelHelper");
 
 const ratingSchema = new mongoose.Schema(
   {
