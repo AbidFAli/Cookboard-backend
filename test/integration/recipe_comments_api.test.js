@@ -11,12 +11,16 @@ const {
   createRandomRecipe,
 } = require("./test_utils/testHelper.js");
 const { waffles } = require("./fixtures/recipeFixtures");
+const { TestCommentFactory, idComparator } = require("./test_utils/testHelper");
 
 const api = supertest(app);
 
 let initialUser;
 let initialUserToken;
 let testRecipe;
+let commentFactory;
+
+//TODO: improve performance
 
 beforeAll(async () => {
   await Recipe.deleteMany({});
@@ -35,6 +39,10 @@ beforeAll(async () => {
   testRecipe = new Recipe({ ...params });
   testRecipe.user = initialUser.id;
   testRecipe = await testRecipe.save();
+  commentFactory = new TestCommentFactory({
+    user: initialUser,
+    recipe: testRecipe,
+  });
 });
 
 beforeEach(async () => {
@@ -110,6 +118,7 @@ describe("tests for recipe comments", () => {
     expect(dbComment.id).toEqual(response.body.id);
   });
 
+  //TODO turn this into a test table
   describe("tests for GET /api/recipes/:recipeId/comments", () => {
     let initialCommentData;
     let createdComments;
@@ -161,36 +170,85 @@ describe("tests for recipe comments", () => {
       initialCommentData = initialCommentData.sort(
         Comment.dateComparator("asc")
       );
-      let afterDate = initialCommentData[1].date; //number
+      let filterDate = initialCommentData[1].date; //number
 
       let response = await api.get(
-        `/api/recipes/${testRecipe.id}/comments?after=${afterDate}`
+        `/api/recipes/${testRecipe.id}/comments?after=${filterDate}`
       );
       let expectedComments = initialCommentData.filter(
-        (comment) => comment.date > afterDate
+        (comment) => comment.date > filterDate
       );
       response.body = response.body.sort(Comment.dateComparator("asc"));
-      expect(response.body).toHaveLength(2);
       expect(response.body).toMatchObject(expectedComments);
     });
 
-    test.skip("get comments before a time period", async () => {
-      let afterDate = initialCommentData[1].date;
+    test("get comments before a time period", async () => {
       initialCommentData = initialCommentData.sort(
-        Comment.dateComparator("desc")
+        Comment.dateComparator("asc")
       );
+      let filterDate = initialCommentData[3].date;
       let response = await api.get(
-        `/api/recipes/${testRecipe.id}/comments?before=${String(afterDate)}`
+        `/api/recipes/${testRecipe.id}/comments?before=${String(filterDate)}`
       );
       let expcetedComments = initialCommentData.filter(
-        (comment) => comment.date < afterDate
+        (comment) => comment.date < filterDate
       );
+      response.body = response.body.sort(Comment.dateComparator("asc"));
       expect(response.body).toMatchObject(expcetedComments);
     });
 
-    // test("get comments between a time period", async () => {});
+    test("get comments between a time period", async () => {
+      initialCommentData = initialCommentData.sort(
+        Comment.dateComparator("asc")
+      );
+      let beforeDate = initialCommentData[3].date;
+      let afterDate = initialCommentData[0].date;
+      let response = await api.get(
+        `/api/recipes/${testRecipe.id}/comments?before=${String(
+          beforeDate
+        )}&after=${String(afterDate)}`
+      );
+      let expcetedComments = initialCommentData.slice(1, 3);
+      response.body = response.body.sort(Comment.dateComparator("asc"));
+      expect(response.body).toMatchObject(expcetedComments);
+    });
+  });
 
-    // test("");
+  describe("tests for GET /api/recipes/:recipeId/comments/:commentId/replies", () => {
+    let parent;
+    const makeRequest = () =>
+      api.get(`/api/recipes/${testRecipe.id}/comments/${parent.id}/replies`);
+    beforeEach(async () => {
+      parent = commentFactory.makeComment({ parent: null });
+      parent = await Comment.create(parent);
+    });
+
+    test("a comment with no replies", async () => {
+      let response = await api.get(
+        `/api/recipes/${testRecipe.id}/comments/${parent.id}/replies`
+      );
+      expect(response.body).toEqual([]);
+    });
+
+    test("a comment with one reply", async () => {
+      let replyPojo = commentFactory.makeComment({ parent });
+      let reply = new Comment(replyPojo);
+      await reply.save();
+      let response = await makeRequest();
+      expect(response.body[0]).toMatchObject(replyPojo);
+      expect(response.body[0].id).toEqual(String(reply.id));
+    });
+
+    test("a comment with many replies", async () => {
+      let pojos = [1, 1, 1, 1].map((_) => {
+        return commentFactory.makeComment({ parent });
+      });
+      pojos = pojos.sort(idComparator);
+      await Comment.create(pojos);
+      let response = await makeRequest();
+      response.body = response.body.sort(idComparator);
+      expect(response.body).toMatchObject(pojos);
+    });
   });
 });
 

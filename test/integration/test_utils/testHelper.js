@@ -52,6 +52,40 @@ const createRandomRecipe = async () => {
   return response[0];
 };
 
+class TestCommentFactory {
+  constructor({ user, recipe, parent }) {
+    this.user = user;
+    this.recipe = recipe;
+    this.parent = parent;
+    this.numCreated = 0;
+  }
+
+  /*@param config {
+      parent: Comment || null, 
+  }
+  @increments numCreated
+  */
+  makeComment(config) {
+    this.numCreated += 1;
+    let parent;
+    if (config.parent && config.parent.id) {
+      parent = config.parent.id;
+    } else if (config.parent === null) {
+      parent = undefined;
+    } else {
+      parent = this.parent.id;
+    }
+    return {
+      likes: 0,
+      text: "I am " + this.numCreated,
+      parent,
+      recipe: this.recipe.id,
+      user: this.user.id,
+      date: Date.now(),
+    };
+  }
+}
+
 /*
  *@callback supressionRule:
  *@param error: the error that will be passed to the callback
@@ -65,6 +99,8 @@ const unsupressErrorInTest = () => {
   jest.spyOn(console, "error").mockRestore();
 };
 
+const idComparator = (c1, c2) => String(c1.id).localeCompare(String(c2.id));
+
 module.exports = {
   authHeader,
   getTokenForUser,
@@ -73,4 +109,6 @@ module.exports = {
   supressErrorInTest,
   unsupressErrorInTest,
   createRandomRecipe,
+  TestCommentFactory,
+  idComparator,
 };

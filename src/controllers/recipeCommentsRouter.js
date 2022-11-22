@@ -117,8 +117,13 @@ commentsRouter.get(
   `/:commentId(${ID_ROUTE_REGEX})`,
   async (request, response, next) => {
     let commentId = request.params.commentId;
+    let comment;
+    try {
+      comment = await Comment.findById(commentId);
+    } catch (error) {
+      next(error);
+    }
 
-    let comment = await Comment.findById(commentId);
     if (!comment) {
       return response.status(404).send();
     }
@@ -126,10 +131,32 @@ commentsRouter.get(
   }
 );
 
-// commentsRouter.get(
-//   `/:commentId(${ID_ROUTE_REGEX})/replies`,
-//   async (request, response, next) => {}
-// );
+commentsRouter.get(
+  `/:commentId(${ID_ROUTE_REGEX})/replies`,
+  async (request, response, next) => {
+    let commentId = request.params.commentId;
+
+    //find recipes whose parent === commentId
+    let filter = { recipe: request.params.recipeId, parent: commentId };
+
+    filter = buildFilter(request.query, filter);
+    if (filter.error) {
+      return response.status(400).send(filter.error).send();
+    }
+
+    let sort = buildSort(request.query);
+    if (sort.error) {
+      return response.status(400).send(sort.error).send();
+    }
+
+    let comment = await Comment.find(filter).sort(sort);
+
+    if (!comment) {
+      comment = [];
+    }
+    return response.send(comment);
+  }
+);
 
 /*
 request body: {
