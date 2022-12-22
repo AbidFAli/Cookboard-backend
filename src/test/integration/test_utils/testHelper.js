@@ -1,5 +1,5 @@
 const { JsonWebTokenError } = require("jsonwebtoken");
-const { Recipe } = require("../../../src/models/recipe");
+const { Recipe } = require("../../../models/recipe");
 
 const authHeader = (token) => {
   return { Authorization: `Bearer ${token}` };

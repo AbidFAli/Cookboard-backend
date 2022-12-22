@@ -1,6 +1,6 @@
-const config = require("./utils/config"); //inits environment variables
-const app = require("./app");
-const http = require("http");
+import config = require("./utils/config.js"); //inits environment variables
+import app = require("./app");
+import http = require("http");
 
 const server = http.createServer(app);
 const PORT = config.PORT;

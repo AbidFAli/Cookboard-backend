@@ -1,11 +1,11 @@
 const supertest = require("supertest");
 const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
-const app = require("../../src/app");
-const { Recipe } = require("../../src/models/recipe");
-const User = require("../../src/models/user");
+const app = require("../../app");
+const { Recipe } = require("../../models/recipe");
+const User = require("../../models/user");
 const { authHeader, getTokenForUser } = require("./test_utils/testHelper.js");
-const { UserCreationError } = require("../../src/utils/errors");
+const { UserCreationError } = require("../../utils/errors");
 const {
   beforeEach,
   test,

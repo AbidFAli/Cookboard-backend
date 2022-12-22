@@ -1,9 +1,9 @@
 const supertest = require("supertest");
 const mongoose = require("mongoose");
-const app = require("../../src/app");
-const { Recipe } = require("../../src/models/recipe");
-const User = require("../../src/models/user");
-const { Rating } = require("../../src/models/rating");
+const app = require("../../app");
+const { Recipe } = require("../../models/recipe");
+const User = require("../../models/user");
+const { Rating } = require("../../models/rating");
 const {
   authHeader,
   getTokenForUser,
@@ -15,7 +15,7 @@ const {
 
 const api = supertest(app);
 const recipeFixtures = require("./fixtures/recipeFixtures");
-const mongoHelper = require("../../src/utils/mongoHelper");
+const mongoHelper = require("../../utils/mongoHelper");
 const { waffles } = require("./fixtures/recipeFixtures");
 const { ObjectId } = require("mongodb");
 

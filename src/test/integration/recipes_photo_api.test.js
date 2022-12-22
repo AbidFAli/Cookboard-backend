@@ -1,13 +1,13 @@
-const app = require("../../src/app");
+const app = require("../../app");
 const supertest = require("supertest");
 const api = supertest(app);
 const mongoose = require("mongoose");
-const { Recipe } = require("../../src/models/recipe");
+const { Recipe } = require("../../models/recipe");
 const recipeFixtures = require("./fixtures/recipeFixtures");
-const User = require("../../src/models/user");
+const User = require("../../models/user");
 
 const testHelper = require("./test_utils/testHelper.js");
-const mongoHelper = require("../../src/utils/mongoHelper");
+const mongoHelper = require("../../utils/mongoHelper");
 const photoTestHelper = require("./test_utils/photoTestHelper.js");
 
 const {
