@@ -6,9 +6,9 @@ const { Recipe } = require("../../models/recipe");
 const recipeFixtures = require("./fixtures/recipeFixtures");
 const User = require("../../models/user");
 
-const testHelper = require("./test_utils/testHelper.js");
+const testHelper = require("./test_utils/testHelper");
 const mongoHelper = require("../../utils/mongoHelper");
-const photoTestHelper = require("./test_utils/photoTestHelper.js");
+const photoTestHelper = require("./test_utils/photoTestHelper");
 
 const {
   ListObjectsCommand,
