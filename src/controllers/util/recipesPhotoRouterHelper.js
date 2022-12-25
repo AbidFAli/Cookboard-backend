@@ -1,4 +1,4 @@
-const { AWS_CREDENTIALS, AWS_REGION } = require("../config");
+const { AWS_CREDENTIALS, AWS_REGION } = require("../../utils/config");
 const { S3Client, DeleteObjectsCommand } = require("@aws-sdk/client-s3");
 
 const PHOTO_BUCKET_URL =
