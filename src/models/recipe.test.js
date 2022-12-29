@@ -5,10 +5,9 @@ const {
   describe,
   afterAll,
 } = require("@jest/globals");
-const { Recipe, RecipeError } = require("./recipe");
+const { Recipe } = require("./recipe");
 const User = require("./user");
 const { connectToMongo } = require("../utils/mongoHelper");
-const { isEmpty } = require("lodash");
 const { mongoose } = require("mongoose");
 
 let connection;

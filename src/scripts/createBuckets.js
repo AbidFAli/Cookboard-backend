@@ -1,4 +1,4 @@
-require("../src/utils/config");
+require("../utils/config");
 
 var AWS = require("aws-sdk");
 

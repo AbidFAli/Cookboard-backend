@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 const { ingredientSchema } = require("./ingredient");
-const { COLLATION_OPTION } = require("../utils/modelHelper");
+const { COLLATION_OPTION } = require("./modelHelper");
 const { Rating } = require("./rating");
 
 const MAX_RATING = 5;

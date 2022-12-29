@@ -1,14 +1,17 @@
-const {
+import {
   getS3Client,
   PHOTO_BUCKET_NAME,
-} = require("../../../src/utils/controllers/recipesPhotoRouterHelper");
+} from "controllers/util/recipesPhotoRouterHelper";
 
-const {
+import type {ListObjectsCommandOutput} from "@aws-sdk/client-s3";
+import {
   HeadObjectCommand,
   PutObjectCommand,
   ListObjectsCommand,
   DeleteObjectsCommand,
-} = require("@aws-sdk/client-s3");
+  DeleteObjectsCommandInput,
+  ObjectIdentifier
+} from "@aws-sdk/client-s3";
 
 const s3Client = getS3Client();
 const TEST_PREFIX = "test/recipes";
@@ -19,7 +22,7 @@ const getTestPhotos = async () => {
     Prefix: TEST_PREFIX,
   };
   const response = await s3Client.send(new ListObjectsCommand(params));
-  let photos = [];
+  let photos: Array<Object> = [];
   if (response.Contents) {
     photos = response.Contents.map((photo) => {
       return { Key: photo.Key };
@@ -28,23 +31,23 @@ const getTestPhotos = async () => {
   return photos;
 };
 
-const deleteTestPhotos = async (keys) => {
+const deleteTestPhotos = async (keys: Array<Object> | undefined| null) => {
   if (!keys || keys.length === 0) {
     return;
   }
 
-  const params = {
+  const params: DeleteObjectsCommandInput = {
     Bucket: PHOTO_BUCKET_NAME,
     Delete: {
       Objects: keys.map((key) => {
         return { Key: key };
-      }),
+      }) as Array<ObjectIdentifier>,
     },
   };
   await s3Client.send(new DeleteObjectsCommand(params));
 };
 
-const uploadTestPhoto = async (key) => {
+const uploadTestPhoto = async (key: string) => {
   const bucketParams = {
     Bucket: PHOTO_BUCKET_NAME,
     Key: key,
@@ -53,7 +56,7 @@ const uploadTestPhoto = async (key) => {
   return s3Client.send(new PutObjectCommand(bucketParams));
 };
 
-const testPhotoExists = async (key) => {
+const testPhotoExists = async (key: string) => {
   const bucketParams = {
     Bucket: PHOTO_BUCKET_NAME,
     Key: key,
@@ -66,7 +69,7 @@ const testPhotoExists = async (key) => {
   }
 };
 
-module.exports = {
+export = {
   testPhotoExists,
   uploadTestPhoto,
   deleteTestPhotos,

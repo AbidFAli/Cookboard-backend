@@ -1,10 +1,10 @@
 const supertest = require("supertest");
 const mongoose = require("mongoose");
-const app = require("../../src/app");
-const { Recipe } = require("../../src/models/recipe");
-const User = require("../../src/models/user");
+const app = require("../../app");
+const { Recipe } = require("../../models/recipe");
+const User = require("../../models/user");
 const jwt = require("jsonwebtoken");
-const mongoHelper = require("../../src/utils/mongoHelper");
+const mongoHelper = require("../../utils/mongoHelper");
 const {
   beforeEach,
   test,

@@ -1,0 +1,18 @@
+{
+  "compilerOptions" : {
+    "target": "es2020",
+    "module" : "CommonJS",
+    "moduleResolution": "Node",
+    "outDir" : "./build",
+    "allowJs": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true, 
+    "noImplicitAny": true,
+    "noEmitOnError": true,
+    "baseUrl": "./src",
+    "incremental": true,
+    "sourceMap" : true
+  },
+  "include": ["./src/**/*"],
+  "exclude" : ["node_modules"]
+}

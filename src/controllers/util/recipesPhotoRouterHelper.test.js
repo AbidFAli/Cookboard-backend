@@ -9,7 +9,7 @@ const {
   uploadTestPhoto,
   testPhotoExists,
   TEST_PREFIX,
-} = require("../../../test/integration/test_utils/photoTestHelper");
+} = require("../../test/integration/test_utils/photoTestHelper");
 
 //in the future, create a test bucket for this.
 const generateKey = () => {

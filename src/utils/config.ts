@@ -1,5 +1,6 @@
-require("dotenv").config();
-const { fromEnv } = require("@aws-sdk/credential-providers");
+import { fromEnv } from "@aws-sdk/credential-providers";
+import * as dotenv from 'dotenv';
+dotenv.config();
 
 const MONGODB_URI =
   process.env.NODE_ENV === "test"
@@ -10,7 +11,7 @@ const AWS_REGION = "us-east-2";
 
 const AWS_CREDENTIALS = fromEnv();
 
-module.exports = {
+export = {
   MONGODB_URI,
   PORT,
   AWS_CREDENTIALS,

@@ -1,9 +1,9 @@
+const { SearchError } = require("../../utils/errors");
+
 const RECIPE_SEARCH_INDEX = "name_ingredient_rating";
 const RATING_MAX_VALUE = 5;
 const RATING_PIVOT = 2.5;
 const DEFAULT_RESULT_SIZE = 50;
-
-const { SearchError } = require("../errors");
 
 const buildRatingFilter = (queryParams) => {
   let ratingFilter = { range: { path: "avgRating" } };

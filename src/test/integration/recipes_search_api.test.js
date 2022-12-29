@@ -1,7 +1,7 @@
 const supertest = require("supertest");
 const mongoose = require("mongoose");
-const app = require("../../src/app");
-const { Recipe } = require("../../src/models/recipe");
+const app = require("../../app");
+const { Recipe } = require("../../models/recipe");
 const api = supertest(app);
 const recipeFixtures = require("./fixtures/recipeFixtures");
 //const mongoHelper = require("../../src/utils/mongoHelper");
