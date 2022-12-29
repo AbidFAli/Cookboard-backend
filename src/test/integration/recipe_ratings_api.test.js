@@ -205,10 +205,13 @@ describe("tests for POST /api/recipes/ratings", () => {
         userId: initialUser.id,
         recipe: testRecipe.id,
       };
-      await api
+      let response = await api
         .post("/api/recipes/ratings")
         .set(authHeader(initialUserToken))
         .send(rating);
+
+      //test response body
+      expect(response.body.avgRating).toBeCloseTo(3.5);
       let updatedRecipe = await Recipe.findOne({
         _id: testRecipe.id,
       });
@@ -221,10 +224,11 @@ describe("tests for POST /api/recipes/ratings", () => {
         userId: initialUser.id,
         recipe: testRecipe.id,
       };
-      await api
+      let response = await api
         .post("/api/recipes/ratings")
         .set(authHeader(initialUserToken))
         .send(rating);
+      expect(response.body.avgRating).toBeCloseTo(4);
       let updatedRecipe = await Recipe.findOne({
         _id: testRecipe.id,
       });
