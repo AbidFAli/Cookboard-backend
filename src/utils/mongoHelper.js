@@ -4,6 +4,8 @@ const mongoose = require("mongoose");
 const MONGODB_URI = config.MONGODB_URI;
 let session = null;
 
+mongoose.set("strictQuery", false);
+
 async function connectToMongo() {
   let connection;
   try {
