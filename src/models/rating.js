@@ -1,5 +1,5 @@
 const { mongoose, Schema } = require("mongoose");
-const autopopulatePlugin = require("mongoose-autopopulate");
+//const autopopulatePlugin = require("mongoose-autopopulate");
 const { autoIndexEnabled } = require("./modelHelper");
 
 const ratingSchema = new mongoose.Schema(

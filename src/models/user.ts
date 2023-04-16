@@ -1,7 +1,16 @@
-const mongoose = require("mongoose");
-const uniqueValidator = require("mongoose-unique-validator");
+/// <reference path="./mongoose-unique-validator.d.ts"
+import mongoose from "mongoose";
+import uniqueValidator from "mongoose-unique-validator";
 
-const userSchema = new mongoose.Schema(
+
+interface IUser{
+  username: String;
+  email?: String;
+  passwordHash: String;
+  recipes: mongoose.Types.ObjectId[] | Record<string, any>;
+}
+
+const userSchema = new mongoose.Schema<IUser>(
   {
     username: {
       type: String,

@@ -27,6 +27,8 @@ WSL:
 # Dev Setup
 
 1. Create the .env file(NOT ON VERSION CONTROL)
+2. Install volta
+3. Install python
 
 # Credits
 
