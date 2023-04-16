@@ -28,12 +28,12 @@ interface IRating{
   recipeName: string;
 }
 
-const getAvgRatingFromDoc = async (recipeId: string) =>{
+const getRecipe = async (recipeId: string) =>{
   let response: null| IRecipe = await Recipe.findById(recipeId);
   if(!response){
     return undefined
   }
-  return response.avgRating;
+  return {avgRating: response.avgRating, recipeName: response.name};
 }
 
 const getUserHasRated = async (recipeId: string, userId: string ) => {
@@ -44,17 +44,23 @@ const getUserHasRated = async (recipeId: string, userId: string ) => {
   return true;
 }
 
-const getRatings = async (searchParams: {recipeId? : string, userId?: string}) => {
-  let response: [] | IRating[] = await Rating.find({recipeId: searchParams.recipeId, userId: searchParams.userId});
-  return response;
+const getRatingsInfo = async (searchParams: {recipeId? : string, userId?: string}) => {
+  let allRatings: [] | IRating[] = await Rating.find({recipeId: searchParams.recipeId});
+  let userRatings = allRatings.filter((rating) => (("" + rating.userId) === searchParams.userId));
+  return {
+    allRatings, userRatings
+  };
 }
 
 
 interface IProgOutput{
+  recipeName?: string;
   avgRating?: number;
-  hasRated?: boolean;
-  ratings?: Array<Object>;
-  ratingsCount?: number;
+  userHasRated?: boolean;
+  userRatingsForRecipe?: Array<Object>;
+  userRatingsCount?: number;
+  allRatingsForRecipe?: Array<Object>;
+  allRatingsCount?: number;
 }
 
 const run = async () => {
@@ -62,30 +68,45 @@ const run = async () => {
   let fileHandle: any;
   try{
     program.option('--user <user>')
-      .option('--recipe <recipe>');
+      .option('--recipe <recipe>')
+      .option('--debug');
     //hello
     program.parse();
     const options = program.opts();
     const recipeId = options.recipe;
     const userId = options.user;
+    const debugOn = options.debug;
+    if(debugOn){
+      console.log(process.argv);
+      console.log(options);
+    }
+    console.log(`recipeId:${recipeId},userId:${userId}`);
 
     connection = await connectToMongo();
     const progOutput: IProgOutput = {};
     if(recipeId){
-      progOutput.avgRating = await getAvgRatingFromDoc(recipeId);
+      const recipeResponse = await getRecipe(recipeId);
+      if(recipeResponse){
+        ({avgRating: progOutput.avgRating, recipeName: progOutput.recipeName}  = recipeResponse);
+      }
+       
     }
 
     if(recipeId && userId){
-      progOutput.hasRated = await getUserHasRated(recipeId, userId);
+      progOutput.userHasRated = await getUserHasRated(recipeId, userId);
     }
 
     if(recipeId || userId){
-      progOutput.ratings = await getRatings({recipeId: recipeId, userId: userId});
-      progOutput.ratingsCount = progOutput.ratings.length;
+      const ratingsInfo = await getRatingsInfo({recipeId: recipeId, userId: userId});
+      progOutput.allRatingsForRecipe = ratingsInfo.allRatings;
+      progOutput.allRatingsCount = ratingsInfo.allRatings.length;
+      progOutput.userRatingsForRecipe = ratingsInfo.userRatings;
+      progOutput.userRatingsCount = ratingsInfo.userRatings.length;
     }
     
     fileHandle = await open('results.json', 'w')
     let outputStr = JSON.stringify(progOutput, null, 2);
+    console.log(outputStr);
     await fileHandle.writeFile(outputStr);
   }
   catch(error: any){

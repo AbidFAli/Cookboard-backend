@@ -30,6 +30,12 @@ WSL:
 2. Install volta
 3. Install python
 
+
+# HOWTO
+  Run a script  
+  `npm run run-script <script-path>`
+
+
 # Credits
 
 Some ideas and code modification from FullStackOpen(https://fullstackopen.com/en/) Chapters 2-5.

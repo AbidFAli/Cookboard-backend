@@ -117,6 +117,18 @@ recipeRatingsRouter.put("/", async (request, response, next) => {
         { session }
       );
 
+      if (
+        oldRating === null ||
+        oldRating === undefined ||
+        !("value" in oldRating)
+      ) {
+        response.status(500);
+        await session.abortTransaction();
+        console.error(
+          "PUT /api/recipes/ratings . There was not an existing rating to update."
+        );
+        return;
+      }
       updatedRecipe = await Recipe.replaceRating(
         body.recipe,
         oldRating.value,

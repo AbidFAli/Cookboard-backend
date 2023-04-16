@@ -5,11 +5,12 @@
   "scripts": {
     "start": "node build/index.js",
     "test": "cross-env NODE_ENV=test jest --verbose --runInBand",
-    "dev": "cross-env NODE_ENV=development nodemon ./build/src/index.js",
+    "dev": "cross-env NODE_ENV=development nodemon ./src/index.ts",
     "start:test": "cross-env NODE_ENV=test node index.js",
     "lint": "npx eslint ./",
     "build": "python src/scripts/build/build.py --dir=$(pwd)",
-    "cleanup": "rm -rf build/*"
+    "cleanup": "rm -rf build/*",
+    "run-script": "ts-node-cwd -r tsconfig-paths/register"
   },
   "author": "Abid Ali",
   "license": "MIT",
@@ -54,6 +55,7 @@
     "supertest": "^6.3.3",
     "ts-jest": "^29.0.3",
     "ts-node": "^10.9.1",
+    "tsconfig-paths": "^4.2.0",
     "typescript": "^4.9.5"
   },
   "engines": {

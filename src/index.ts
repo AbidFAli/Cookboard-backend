@@ -1,4 +1,4 @@
-import config = require("./utils/config.js"); //inits environment variables
+import config = require("./utils/config"); //inits environment variables
 import app = require("./app");
 import http = require("http");
 
