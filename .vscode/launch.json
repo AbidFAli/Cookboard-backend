@@ -14,13 +14,14 @@
                 "--",
                 "${fileBasenameNoExtension}"
             ],
-            "runtimeExecutable": "npm",
+            "runtimeExecutable": "/home/abidfali/.volta/bin/npm",
             "skipFiles": [
                 "<node_internals>/**"
             ],
             "type": "pwa-node",
             "console": "integratedTerminal",
-            "internalConsoleOptions": "neverOpen"
+            "internalConsoleOptions": "neverOpen",
+            
         },
         {
             "type": "node",
